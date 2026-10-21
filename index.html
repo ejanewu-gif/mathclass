@@ -35782,14 +35782,9 @@
               <div class="bg-slate-50/70 p-3 sm:p-4 rounded-xl border border-slate-200/90 flex flex-col items-center justify-center relative group">
                 <div class="w-full flex justify-between items-center mb-1.5 px-0.5">
                   <span class="text-[11px] text-slate-400 font-medium">官方試題原圖（點擊開啟純淨全螢幕放大）</span>
-                  <div class="flex items-center space-x-1.5">
-                    <button type="button" onclick="copyAiPrompt('${y}', ${item.q})" class="text-[11px] font-bold text-indigo-700 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-200 shadow-2xs flex items-center space-x-1 transition-all">
-                      <span>🤖 複製 AI 處方</span>
-                    </button>
-                    <button type="button" onclick="openImageLightbox('${imgPath}', '${encodeURIComponent(qTitle)}')" class="text-[11px] font-bold text-sky-700 hover:text-sky-800 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs hover:bg-sky-50 flex items-center space-x-1 transition-all">
-                      <span>🔍 放大檢視</span>
-                    </button>
-                  </div>
+                  <button type="button" onclick="openImageLightbox('${imgPath}', '${encodeURIComponent(qTitle)}')" class="text-[11px] font-bold text-sky-700 hover:text-sky-800 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs hover:bg-sky-50 flex items-center space-x-1 transition-all">
+                    <span>🔍 放大檢視</span>
+                  </button>
                 </div>
                 <div class="w-full bg-white p-2 sm:p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-center cursor-zoom-in" onclick="openImageLightbox('${imgPath}', '${encodeURIComponent(qTitle)}')">
                   <img src="${imgPath}" 
