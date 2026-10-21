@@ -1,0 +1,11 @@
+# Local reference files and raw source PDFs
+115學力檢測分析資料/
+_後台處理腳本與中繼資料/
+extracted_pages/
+參考資料/
+*.py
+*.pptx
+*.docx
+__pycache__/
+.user_uploaded/
+.gemini/
