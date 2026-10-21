@@ -8,134 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com">
-    // Toast Notification Utility
-    let toastTimeout = null;
-    function showToast(message) {
-      const toast = document.getElementById('toastContainer');
-      const msgEl = document.getElementById('toastMessage');
-      if (!toast || !msgEl) return;
-      msgEl.innerText = message;
-      toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
-      toast.classList.add('opacity-100', 'translate-y-0');
-      if (toastTimeout) clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => {
-        toast.classList.remove('opacity-100', 'translate-y-0');
-        toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
-      }, 3000);
-    }
-
-    // Modal current tracking
-    let modalCurrentYear = '';
-    let modalCurrentQNum = 1;
-
-    function copyAiPromptFromModal() {
-      if (modalCurrentYear && modalCurrentQNum) {
-        copyAiPrompt(modalCurrentYear, modalCurrentQNum);
-      }
-    }
-
-    // Dynamic AI Prescription Prompt Generator
-    function copyAiPrompt(year, qnum) {
-      const g = String(currentGrade);
-      const qData = MASTER_DB.past_years && MASTER_DB.past_years[g] && MASTER_DB.past_years[g][year] ? MASTER_DB.past_years[g][year][String(qnum)] : null;
-      if (!qData) {
-        showToast('⚠️ 找不到該題目詳細數據');
-        return;
-      }
-
-      const units = MASTER_DB.units[g]?.up[currentPublisher] || [];
-      const unit = units[currentUnitIndex];
-      const unitName = unit ? unit.name : '對應單元';
-      const unitNum = unit ? unit.num : '';
-      const gradeLabel = g === '3' ? '三年級' : (g === '4' ? '四年級' : (g === '5' ? '五年級' : '六年級'));
-
-      // Format options and find top distractor
-      let optionsText = '';
-      let topDistractor = null;
-      let maxLowRate = -1;
-      if (qData.options) {
-        optionsText = Object.keys(qData.options).map(optKey => {
-          const opt = qData.options[optKey];
-          const isAns = opt.is_ans;
-          const ratePct = Math.round(opt.rate * 100);
-          const lowPct = Math.round(opt.low * 100);
-          const highPct = Math.round(opt.high * 100);
-          if (!isAns && opt.low > maxLowRate) {
-            maxLowRate = opt.low;
-            topDistractor = { key: optKey, lowPct: lowPct, ratePct: ratePct };
-          }
-          return `  - 選項 (${optKey}) ${isAns ? '【標準正解】' : '【誘答選項】'}：全體選答率 ${ratePct}%（低分組選答率 ${lowPct}%、高分組選答率 ${highPct}%）`;
-        }).join('\n');
-      }
-
-      let distractorNote = '';
-      if (topDistractor && topDistractor.lowPct >= 15) {
-        distractorNote = `特別警示：低分組學生有高達 ${topDistractor.lowPct}% 掉入選項 (${topDistractor.key}) 的誘答陷阱！`;
-      }
-
-      // Public image URL on GitHub Pages
-      const imgUrl = `https://ejanewu-gif.github.io/mathclass/${qData.img}`;
-
-      const promptText = `【角色設定】
-你是一位精通臺灣 108 課綱國小數學與臺南市學力檢測診斷的資深國小數學輔導員。請協助我（任教班級導師）針對我班上學生的學力檢測弱點，生成「課前 3~5 分鐘能直接說給學生聽、做給學生看」的精準教學處方。
-
-【檢測題目背景與真實數據】
-- 檢測年級與考題：${gradeLabel} ${year}年 第 ${qnum} 題
-- 對應目前教學進度：[${currentPublisher}版] 第 ${unitNum} 單元《${unitName}》
-- 評量重點／分年指標：${qData.indicator || '未提供'}
-- 全市數據：整體通過率 ${qData.rate}%，鑑別度 ${qData.disc}，標準答案為第 (${qData.ans}) 選項
-- 題目線上高解析原圖（請點開檢視或貼入題目圖形）：
-  ${imgUrl}
-- 四選項高低分組作答反應率：
-${optionsText}
-${distractorNote ? '- 誘答陷阱剖析：' + distractorNote : ''}
-
-【官方輔導團深度試題分析（題目情境與學生迷思盲點）】
-${qData.qa || '（無官方分析文字）'}
-
-【官方輔導團教材地位與補救教學指引】
-${qData.rem || '（無官方補救文字）'}
-
-【我的班級現場情境】
-我們班在這次學力檢測中，這題的答對率低於預期，許多學生掉入了上述的特定誘答選項。
-
-【請為我生成「明天走進教室就能直接用」的課堂教學處方】
-1. 【30 秒白話診斷】：用 2~3 句話點破學生在心智模型上的致命盲點（到底卡在什麼認知觀念？為何會被特定選項誘答？）。
-2. 【課前 3~5 分鐘防雷提問（極簡對話話術）】：請設計 1 組在下週進入該單元時，老師可以直接在黑板上畫圖、拿教具或在投影機上提問的「微暖身防雷話術」（請以對話劇本方式呈現，包含老師提問、預期學生錯誤直覺回答、以及老師的引導追問）。
-3. 【班級雙軌差異化任務】：
-   - 待止血組（基礎組）：1 個能動手操作檢驗、穩固底層觀念的極簡小任務。
-   - 挑戰組（精熟組）：1 個能深化辨析、避免再次掉坑的延伸思考題。
-（請以口語化、具體條列、不講空泛理論的方式呈現，方便老師直接印出或帶著進教室教！）`;
-
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(promptText).then(() => {
-          showToast(`🤖 已複製 ${year}年第${qnum}題「專屬 AI 處方 Prompt」！可直接貼至 ChatGPT / Gemini`);
-        }).catch(err => {
-          fallbackCopyText(promptText, year, qnum);
-        });
-      } else {
-        fallbackCopyText(promptText, year, qnum);
-      }
-    }
-
-    function fallbackCopyText(text, year, qnum) {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand('copy');
-        showToast(`🤖 已複製 ${year}年第${qnum}題「專屬 AI 處方 Prompt」！可直接貼至 ChatGPT / Gemini`);
-      } catch (e) {
-        prompt('請手動複製下列 Prompt：', text);
-      }
-      document.body.removeChild(ta);
-    }
-
-  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -36869,6 +36742,140 @@ ${unit.tip}
     });
 
     window.onload = init;
+  
+    // Toast Notification Utility
+    let toastTimeout = null;
+    function showToast(message) {
+      const toast = document.getElementById('toastContainer');
+      const msgEl = document.getElementById('toastMessage');
+      if (!toast || !msgEl) return;
+      msgEl.innerText = message;
+      toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+      }, 3000);
+    }
+
+    // Modal current tracking
+    let modalCurrentYear = '';
+    let modalCurrentQNum = 1;
+
+    function copyAiPromptFromModal() {
+      if (modalCurrentYear && modalCurrentQNum) {
+        copyAiPrompt(modalCurrentYear, modalCurrentQNum);
+      }
+    }
+
+    // Dynamic AI Prescription Prompt Generator
+    function copyAiPrompt(year, qnum) {
+      try {
+        const g = String(currentGrade);
+        const yStr = String(year);
+        const qStr = String(qnum);
+        const qData = MASTER_DB.past_years && MASTER_DB.past_years[g] && MASTER_DB.past_years[g][yStr] ? MASTER_DB.past_years[g][yStr][qStr] : null;
+        if (!qData) {
+          showToast('⚠️ 找不到該題目詳細數據');
+          return;
+        }
+
+        const units = MASTER_DB.units[g]?.up[currentPublisher] || [];
+        const unit = units[currentUnitIndex];
+        const unitName = unit ? unit.name : '對應單元';
+        const unitNum = unit ? unit.num : '';
+        const gradeLabel = g === '3' ? '三年級' : (g === '4' ? '四年級' : (g === '5' ? '五年級' : '六年級'));
+
+        // Format options and find top distractor
+        let optionsText = '';
+        let topDistractor = null;
+        let maxLowRate = -1;
+        if (qData.options) {
+          optionsText = Object.keys(qData.options).map(optKey => {
+            const opt = qData.options[optKey];
+            const isAns = opt.is_ans;
+            const ratePct = Math.round(opt.rate * 100);
+            const lowPct = Math.round(opt.low * 100);
+            const highPct = Math.round(opt.high * 100);
+            if (!isAns && opt.low > maxLowRate) {
+              maxLowRate = opt.low;
+              topDistractor = { key: optKey, lowPct: lowPct, ratePct: ratePct };
+            }
+            return `  - 選項 (${optKey}) ${isAns ? '【標準正解】' : '【誘答選項】'}：全體選答率 ${ratePct}%（低分組選答率 ${lowPct}%、高分組選答率 ${highPct}%）`;
+          }).join('\n');
+        }
+
+        let distractorNote = '';
+        if (topDistractor && topDistractor.lowPct >= 15) {
+          distractorNote = `特別警示：低分組學生有高達 ${topDistractor.lowPct}% 掉入選項 (${topDistractor.key}) 的誘答陷阱！`;
+        }
+
+        // Public image URL on GitHub Pages
+        const imgUrl = `https://ejanewu-gif.github.io/mathclass/${qData.img}`;
+
+        const promptText = `【角色設定】
+你是一位精通臺灣 108 課綱國小數學與臺南市學力檢測診斷的資深國小數學輔導員。請協助我（任教班級導師）針對我班上學生的學力檢測弱點，生成「課前 3~5 分鐘能直接說給學生聽、做給學生看」的精準教學處方。
+
+【檢測題目背景與真實數據】
+- 檢測年級與考題：${gradeLabel} ${year}年 第 ${qnum} 題
+- 對應目前教學進度：[${currentPublisher}版] 第 ${unitNum} 單元《${unitName}》
+- 評量重點／分年指標：${qData.indicator || '未提供'}
+- 全市數據：整體通過率 ${qData.rate}%，鑑別度 ${qData.disc}，標準答案為第 (${qData.ans}) 選項
+- 題目線上高解析原圖（可直接點開檢視或貼圖至 AI）：
+  ${imgUrl}
+- 四選項高低分組作答反應率：
+${optionsText}
+${distractorNote ? '- 誘答陷阱剖析：' + distractorNote : ''}
+
+【官方輔導團深度試題分析（題目情境與學生迷思盲點）】
+${qData.qa || '（無官方分析文字）'}
+
+【官方輔導團教材地位與補救教學指引】
+${qData.rem || '（無官方補救文字）'}
+
+【我的班級現場情境】
+我們班在這次學力檢測中，這題的答對率低於預期，許多學生掉入了上述的特定誘答選項。
+
+【請為我生成「明天走進教室就能直接用」的課堂教學處方】
+1. 【30 秒白話診斷】：用 2~3 句話點破學生在心智模型上的致命盲點（到底卡在什麼認知觀念？為何會被特定選項誘答？）。
+2. 【課前 3~5 分鐘防雷提問（極簡對話話術）】：請設計 1 組在下週進入該單元時，老師可以直接在黑板上畫圖、拿教具或在投影機上提問的「微暖身防雷話術」（請以對話劇本方式呈現，包含老師提問、預期學生錯誤直覺回答、以及老師的引導追問）。
+3. 【班級雙軌差異化任務】：
+   - 待止血組（基礎組）：1 個能動手操作檢驗、穩固底層觀念的極簡小任務。
+   - 挑戰組（精熟組）：1 個能深化辨析、避免再次掉坑的延伸思考題。
+（請以口語化、具體條列、不講空泛理論的方式呈現，方便老師直接印出或帶著進教室教！）`;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(promptText).then(() => {
+            showToast(`🤖 已複製 ${year}年第${qnum}題「專屬 AI 處方 Prompt」！可直接貼至 ChatGPT / Gemini`);
+          }).catch(err => {
+            fallbackCopyText(promptText, year, qnum);
+          });
+        } else {
+          fallbackCopyText(promptText, year, qnum);
+        }
+      } catch (err) {
+        console.error('copyAiPrompt error:', err);
+        showToast('複製失敗：' + err.message);
+      }
+    }
+
+    function fallbackCopyText(text, year, qnum) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(`🤖 已複製 ${year}年第${qnum}題「專屬 AI 處方 Prompt」！可直接貼至 ChatGPT / Gemini`);
+      } catch (e) {
+        prompt('請手動複製下列 Prompt：', text);
+      }
+      document.body.removeChild(ta);
+    }
+
   </script>
 
   <!-- Global Toast Notification -->
