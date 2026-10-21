@@ -110,9 +110,14 @@
         <h2 class="text-xl sm:text-2xl font-black mb-2 text-white leading-tight">
           下週教哪個單元？3 秒預警學生的「致命學習斷層」
         </h2>
-        <p class="text-sm text-slate-300 leading-relaxed">
-          學力檢測考的是前置能力！請在下方選擇您目前任教的【年級】、【版本】與【單元】，系統即時對照全臺南市答對率最低的弱點題型，並提供「課前 3~5 分鐘微暖身策略」與一鍵生成的 AI 提示詞。
-        </p>
+        <div class="text-sm text-slate-300 leading-relaxed flex flex-col gap-1.5">
+          <p class="font-bold text-sky-200">
+            💡 學力檢測診斷的關鍵，在於即時修補新單元的「先備知識斷層」！
+          </p>
+          <p class="text-slate-300">
+            請在下方選擇您任教的【年級、版本、單元】，系統即時對照歷年弱點題型，並提供「課前 3～5 分鐘微暖身策略」與一鍵生成 AI 教學處方。
+          </p>
+        </div>
       </div>
       <!-- Background Graphic -->
       <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -255,7 +260,7 @@
             </div>
             <div class="flex items-center space-x-2">
               <button id="btnModalCopyAiPrompt" type="button" onclick="copyAiPromptFromModal()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer active:scale-95">
-                <span>🤖 複製 AI 處方 Prompt</span>
+                <span>🤖 複製此題「課堂對話處方」AI Prompt</span>
               </button>
               <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -35781,7 +35786,7 @@
                   </div>
                   ${qData && qData.disc ? `<span class="text-xs font-bold px-2 py-1 rounded-full bg-slate-100 text-slate-600">鑑別度 ${qData.disc}</span>` : ''}
                   <button type="button" onclick="copyAiPrompt('${y}', ${item.q})" class="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer hover:shadow-md">
-                    <span>🤖 複製 AI 處方 Prompt</span>
+                    <span>🤖 複製此題「課堂對話處方」AI Prompt</span>
                   </button>
                 </div>
               </div>
@@ -35863,17 +35868,21 @@
 
       // Prepare High-Impact AI Prompt String with Pedagogical Content Knowledge (PCK)
       const promptText = `【角色與任務】
-我是國小${gradeNames[currentGrade]}年級數學老師，目前正在進行${currentPublisher}版【單元${unit.num}：${unit.name}】的教學（課綱條目：${unit.code || ''}，核心概念：${unit.concept}）。
-請為我設計一套「課堂前 3~5 分鐘微暖身小測驗」，目標是在進入新單元前，快速診斷學生的先備概念是否穩固，精準預防學習斷層。
+我是國小${gradeNames[currentGrade]}年級數學老師，即將進入${currentPublisher}版【單元${unit.num}：${unit.name}】的教學（本單元課綱條目：${unit.code || ''}，本單元新概念：${unit.concept}）。
+請為我設計一套「新單元開教前的課前 3~5 分鐘微暖身測驗」，目標是在進入新單元前，快速診斷學生的「先備舊概念」是否穩固，精準預防學習斷層。
 
-【輔導團課堂防雷指引與學生典型盲點】
+⚠️【極度重要：出題範圍嚴格邊界約束】
+1. 【學生完全尚未學習本單元新知】：這是在教本單元第一節課之前的「課前暖身」！學生「完全還沒學過」本單元的全新概念與數字（例如：若本單元要教萬以內數，學生尚未學過千位與萬，出題範圍絕對禁止出現 3024 等本單元新數字！若本單元要教分數乘法，學生尚未學過分數乘法！）。
+2. 【只能考上一學年／前置單元的「先備舊經驗」】：出題範圍必須嚴格鎖定在「本單元所必需的前置舊能力」（例如：三年級數到一萬的先備是「二年級 1000 以內的數、百位與十位的位值換算、10 個百是一千」；四則運算的先備是「加減乘兩步驟應用」等）。
+3. 請完全運用前置年級/單元的概念出題，以檢驗學生進入新單元的「地基」是否穩固。
+
+【輔導團課堂先備預警指引與學生典型盲點】
 ${unit.tip}
 
-【出題規範與題目結構】
-請直接依據上述輔導團指引，生成以下題目與教師診斷提示：
-1. 【保底暖身題 2 題】：純粹檢核先備概念或基本計算（不使用繁複大數字），讓落後學生建立基本信心。
-2. 【診斷防雷題 1 題】：特別針對上述指引中提到的學生典型盲點進行精準設陷，能一眼揪出容易踩雷或觀念混淆的學生。
-3. 【好班衝刺題 1 題】：具備逆向思考、比較或概念推理，挑戰中高程度學生。
+【出題結構規範（請嚴格依據先備舊經驗出題）】
+1. 【先備保底題 2 題】：純粹檢核前置年級/單元的舊概念（不使用繁複大數字），確認最底層地基在不在。
+2. 【概念辨析題 1 題】：針對上述指引提到的先備盲點進行微設陷（例如進位混淆、單位遺漏），能一眼揪出觀念不清的學生。
+3. 【能力銜接題 1 題】：具備承先啟後性質，運用舊經驗推論「如果數字再多一點會怎樣」，自然引導學生進入即將開教的新單元。
 4. 【教師 10 秒即時診斷指引】：請為每題提供標準答案與算式，並附上一句話「若學生答錯，老師在課堂現場應如何一句話點醒他」。`;
 
       panel.innerHTML = `
@@ -35895,13 +35904,13 @@ ${unit.tip}
           </div>
           
           <div class="flex flex-wrap items-center gap-2">
-            <button onclick="openPrintModal()" class="inline-flex items-center space-x-1.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-2xs transition-all active:scale-95" title="產生適合列印成 A4 的學生練習單">
-              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-              <span>🖨️ 產生學生真題練習卷</span>
+            <button onclick="copyPrompt(\`${encodeURIComponent(promptText)}\`)" class="inline-flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95 cursor-pointer" title="教新單元前，請 AI 依上一階段先備舊知識出題診斷">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              <span>🌱 複製「課前先備打底題」AI Prompt</span>
             </button>
-            <button onclick="copyPrompt(\`${encodeURIComponent(promptText)}\`)" class="inline-flex items-center space-x-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-              <span>📋 一鍵複製 AI 課前出題 Prompt</span>
+            <button onclick="openPrintModal()" class="inline-flex items-center space-x-1.5 bg-white hover:bg-slate-50 text-slate-800 border-2 border-slate-300 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer" title="單元教完後，印出歷年學測精選 4 題真題進行課後檢測驗收">
+              <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+              <span>🖨️ 列印「單元真題練習卷」（課後驗收）</span>
             </button>
           </div>
         </div>
