@@ -35519,6 +35519,7 @@
     let currentMatrixYear = '114'; // Default matrix year
     let currentUnitYearFilter = 'all'; // Filter inside unit detail: all, 111, 110, 109
     let currentDiffFilter = 'all'; // Filter inside unit detail: all, danger, warning, safe
+    let currentUnitSubTab = 'guide'; // Sub-tab: 'guide' (課前備課指引) or 'questions' (歷年真題題庫)
 
     const gradeNames = {3: '三', 4: '四', 5: '五', 6: '六'};
 
@@ -35580,6 +35581,11 @@
 
     function setDiffFilter(diff) {
       currentDiffFilter = diff;
+      renderUnitDetail();
+    }
+
+    function setUnitSubTab(tab) {
+      currentUnitSubTab = tab;
       renderUnitDetail();
     }
 
@@ -35887,7 +35893,7 @@ ${unit.tip}
 
       panel.innerHTML = `
         <!-- Header Info -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div>
             <div class="flex items-center space-x-2 text-xs font-bold text-sky-600 mb-1">
               <span>${currentPublisher}版</span>
@@ -35902,91 +35908,148 @@ ${unit.tip}
             </div>
             <p class="text-xs text-slate-500 mt-1 font-medium">核心概念：${unit.concept}</p>
           </div>
+        </div>
+
+        <!-- Sub-Tab Navigation Switcher -->
+        <div class="grid grid-cols-2 bg-slate-100/90 p-1.5 rounded-2xl gap-2 border border-slate-200/80 shadow-2xs">
+          <button type="button" onclick="setUnitSubTab('guide')" class="py-2.5 px-3 sm:px-4 rounded-xl transition-all flex items-center justify-center space-x-2 cursor-pointer ${currentUnitSubTab === 'guide' ? 'bg-white text-emerald-800 shadow-sm font-black ring-2 ring-emerald-500/80' : 'text-slate-500 hover:text-slate-900 hover:bg-white/60 font-bold'}">
+            <span class="text-base sm:text-lg">🌱</span>
+            <div class="text-left">
+              <div class="text-xs sm:text-sm leading-tight">課前備課指引</div>
+              <div class="text-[10px] leading-tight mt-0.5 ${currentUnitSubTab === 'guide' ? 'text-emerald-600 font-semibold' : 'text-slate-400'}">先備防漏與 3~5分微暖身</div>
+            </div>
+          </button>
           
-          <div class="flex flex-wrap items-center gap-2">
-            <button onclick="copyPrompt(\`${encodeURIComponent(promptText)}\`)" class="inline-flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95 cursor-pointer" title="教新單元前，請 AI 依上一階段先備舊知識出題診斷">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-              <span>🌱 複製「課前先備打底題」AI Prompt</span>
-            </button>
-            <button onclick="openPrintModal()" class="inline-flex items-center space-x-1.5 bg-white hover:bg-slate-50 text-slate-800 border-2 border-slate-300 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer" title="單元教完後，印出歷年學測精選 4 題真題進行課後檢測驗收">
-              <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-              <span>🖨️ 列印「單元真題練習卷」（課後驗收）</span>
-            </button>
-          </div>
+          <button type="button" onclick="setUnitSubTab('questions')" class="py-2.5 px-3 sm:px-4 rounded-xl transition-all flex items-center justify-center space-x-2 cursor-pointer ${currentUnitSubTab === 'questions' ? 'bg-white text-indigo-900 shadow-sm font-black ring-2 ring-indigo-500/80' : 'text-slate-500 hover:text-slate-900 hover:bg-white/60 font-bold'}">
+            <span class="text-base sm:text-lg">📝</span>
+            <div class="text-left flex-1 min-w-0">
+              <div class="text-xs sm:text-sm leading-tight flex items-center space-x-1.5">
+                <span>歷年學測題庫</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded-full font-mono ${currentUnitSubTab === 'questions' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'}">${pastList.length}題</span>
+              </div>
+              <div class="text-[10px] leading-tight mt-0.5 ${currentUnitSubTab === 'questions' ? 'text-indigo-600 font-semibold' : 'text-slate-400'}">課後驗收與真題試卷</div>
+            </div>
+          </button>
         </div>
 
-        <!-- Warning & Prescription Box -->
-        <div class="bg-amber-50/80 border border-amber-200 rounded-2xl p-4 sm:p-5 flex flex-col gap-2">
-          <div class="flex items-center space-x-2 text-amber-900 font-bold text-sm">
-            <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            <span>輔導團課堂先備防漏預警與核心指引</span>
-          </div>
-          <p class="text-xs sm:text-sm text-amber-950 leading-relaxed font-medium">
-            ${unit.tip}
-          </p>
-        </div>
+        ${currentUnitSubTab === 'guide' ? `
+          <!-- TAB 1: 課前備課與先備防漏指引 -->
+          <div class="flex flex-col gap-4 pt-1">
+            
+            <!-- AI Prompt Quick-Action Card -->
+            <div class="bg-gradient-to-r from-emerald-50 via-teal-50/60 to-emerald-50 border-2 border-emerald-300/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
+              <div class="space-y-1.5">
+                <div class="flex items-center space-x-2 text-emerald-900 font-bold text-sm">
+                  <span class="text-base">🌱</span>
+                  <span>課前 3～5 分鐘微暖身出題策略</span>
+                  <span class="text-[10px] font-black bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">新單元開教前專用</span>
+                </div>
+                <p class="text-xs text-emerald-950/80 leading-relaxed font-medium">
+                  此 Prompt 已嚴格約束出題邊界：<strong>只能考上一學年/上一單元的「先備舊經驗」</strong>，能為您快速生成 4 題診斷微暖身題，在進入本單元新知前先修補地基！
+                </p>
+              </div>
+              <button onclick="copyPrompt(\`${encodeURIComponent(promptText)}\`)" class="shrink-0 inline-flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                <span>複製「課前先備打底題」AI Prompt</span>
+              </button>
+            </div>
 
-        <!-- Historical Questions Filter Bar -->
-        <div class="flex flex-col gap-3">
-          <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <div>
-              <h4 class="font-bold text-base text-slate-900 flex items-center space-x-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                <span>歷年學力檢測真題對照 (109~114年 · 共 ${pastList.length} 題)</span>
-              </h4>
-              <p class="text-xs text-slate-400 mt-0.5">點擊各題圖片可自適應全螢幕燈箱檢視</p>
+            <!-- Warning & Prescription Box -->
+            <div class="bg-amber-50/90 border border-amber-200 rounded-2xl p-4 sm:p-5 flex flex-col gap-2.5 shadow-2xs">
+              <div class="flex items-center space-x-2 text-amber-900 font-bold text-sm">
+                <svg class="w-5 h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>輔導團課堂先備防漏預警與核心指引</span>
+              </div>
+              <p class="text-xs sm:text-sm text-amber-950 leading-relaxed font-medium">
+                ${unit.tip}
+              </p>
+            </div>
+
+            <!-- Transition Tip to Post-lesson Assessment -->
+            <div class="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-slate-600">
+              <div class="flex items-center space-x-2">
+                <span class="text-base">📌</span>
+                <span><strong>單元教學完畢後？</strong> 本單元已對照收錄 <strong>${pastList.length} 題歷年學測真題</strong>。建議於單元授課完畢後，切換至真題題庫列印 4 題 A4 練習卷驗收學習成效！</span>
+              </div>
+              <button type="button" onclick="setUnitSubTab('questions')" class="shrink-0 font-bold text-indigo-700 hover:text-indigo-900 bg-white px-3.5 py-1.5 rounded-xl border border-slate-300 shadow-2xs hover:border-indigo-400 transition-all flex items-center space-x-1 cursor-pointer">
+                <span>切換至歷年真題題庫 (${pastList.length})</span>
+                <span>→</span>
+              </button>
+            </div>
+
+          </div>
+        ` : `
+          <!-- TAB 2: 歷年學力檢測題庫與課後驗收 -->
+          <div class="flex flex-col gap-4 pt-1">
+            
+            <!-- Tool Header & Print Action -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div>
+                <h4 class="font-bold text-base text-slate-900 flex items-center space-x-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                  <span>歷年學力檢測真題對照 (109~114年 · 共 ${pastList.length} 題)</span>
+                </h4>
+                <p class="text-xs text-slate-400 mt-0.5">點擊各題圖片可自適應全螢幕燈箱檢視 ｜ 每題均提供選項分析與課堂破迷思處方</p>
+              </div>
+
+              <!-- Print Test Sheet Action Button -->
+              <button onclick="openPrintModal()" class="inline-flex items-center space-x-1.5 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 text-indigo-900 border-2 border-indigo-200 px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer" title="單元教完後，印出歷年學測精選 4 題真題進行課後檢測驗收">
+                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span>🖨️ 列印「單元真題練習卷」（課後驗收）</span>
+              </button>
             </div>
 
             <!-- Filter Pills -->
-            <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+            <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-bold bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80">
               <!-- Year Filter -->
-              <div class="flex items-center bg-slate-100 p-1 rounded-xl gap-1 overflow-x-auto border border-slate-200/80 shadow-2xs">
-                <button onclick="setUnitYearFilter('all')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === 'all' ? 'bg-white text-sky-700 shadow-xs font-black ring-1 ring-sky-300/50' : 'text-slate-600 hover:text-slate-900'}">
+              <div class="flex items-center bg-white p-1 rounded-xl gap-1 overflow-x-auto border border-slate-200/80 shadow-2xs">
+                <button onclick="setUnitYearFilter('all')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === 'all' ? 'bg-sky-600 text-white shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'}">
                   全部 (${yearCounts['all']} 題)
                 </button>
-                <button onclick="setUnitYearFilter('114')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === '114' ? 'bg-white text-sky-700 shadow-xs font-black ring-1 ring-sky-300/50' : (yearCounts['114'] === 0 ? 'text-slate-400 opacity-60' : 'text-slate-600 hover:text-slate-900')}">
+                <button onclick="setUnitYearFilter('114')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === '114' ? 'bg-sky-600 text-white shadow-xs font-black' : (yearCounts['114'] === 0 ? 'text-slate-400 opacity-60' : 'text-slate-600 hover:text-slate-900')}">
                   114年 (${yearCounts['114']} 題)
                 </button>
-                <button onclick="setUnitYearFilter('113')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === '113' ? 'bg-white text-sky-700 shadow-xs font-black ring-1 ring-sky-300/50' : (yearCounts['113'] === 0 ? 'text-slate-400 opacity-60' : 'text-slate-600 hover:text-slate-900')}">
+                <button onclick="setUnitYearFilter('113')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === '113' ? 'bg-sky-600 text-white shadow-xs font-black' : (yearCounts['113'] === 0 ? 'text-slate-400 opacity-60' : 'text-slate-600 hover:text-slate-900')}">
                   113年 (${yearCounts['113']} 題)
                 </button>
-                <button onclick="setUnitYearFilter('112')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === '112' ? 'bg-white text-sky-700 shadow-xs font-black ring-1 ring-sky-300/50' : (yearCounts['112'] === 0 ? 'text-slate-400 opacity-60' : 'text-slate-600 hover:text-slate-900')}">
+                <button onclick="setUnitYearFilter('112')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === '112' ? 'bg-sky-600 text-white shadow-xs font-black' : (yearCounts['112'] === 0 ? 'text-slate-400 opacity-60' : 'text-slate-600 hover:text-slate-900')}">
                   112年 (${yearCounts['112']} 題)
                 </button>
-                <button onclick="setUnitYearFilter('111')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === '111' ? 'bg-white text-sky-700 shadow-xs font-black ring-1 ring-sky-300/50' : (yearCounts['111'] === 0 ? 'text-slate-400 opacity-60' : 'text-slate-600 hover:text-slate-900')}">
+                <button onclick="setUnitYearFilter('111')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === '111' ? 'bg-sky-600 text-white shadow-xs font-black' : (yearCounts['111'] === 0 ? 'text-slate-400 opacity-60' : 'text-slate-600 hover:text-slate-900')}">
                   111年 (${yearCounts['111']} 題)
                 </button>
-                <button onclick="setUnitYearFilter('110')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === '110' ? 'bg-white text-sky-700 shadow-xs font-black ring-1 ring-sky-300/50' : (yearCounts['110'] === 0 ? 'text-slate-400 opacity-60' : 'text-slate-600 hover:text-slate-900')}">
+                <button onclick="setUnitYearFilter('110')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === '110' ? 'bg-sky-600 text-white shadow-xs font-black' : (yearCounts['110'] === 0 ? 'text-slate-400 opacity-60' : 'text-slate-600 hover:text-slate-900')}">
                   110年 (${yearCounts['110']} 題)
                 </button>
-                <button onclick="setUnitYearFilter('109')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === '109' ? 'bg-white text-sky-700 shadow-xs font-black ring-1 ring-sky-300/50' : (yearCounts['109'] === 0 ? 'text-slate-400 opacity-60' : 'text-slate-600 hover:text-slate-900')}">
+                <button onclick="setUnitYearFilter('109')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentUnitYearFilter === '109' ? 'bg-sky-600 text-white shadow-xs font-black' : (yearCounts['109'] === 0 ? 'text-slate-400 opacity-60' : 'text-slate-600 hover:text-slate-900')}">
                   109年 (${yearCounts['109']} 題)
                 </button>
               </div>
 
               <!-- Difficulty Filter -->
-              <div class="flex items-center bg-slate-100 p-1 rounded-xl gap-1 overflow-x-auto border border-slate-200/80 shadow-2xs">
-                <button onclick="setDiffFilter('all')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentDiffFilter === 'all' ? 'bg-white text-slate-900 shadow-xs font-black ring-1 ring-slate-300' : 'text-slate-500 hover:text-slate-800'}">
+              <div class="flex items-center bg-white p-1 rounded-xl gap-1 overflow-x-auto border border-slate-200/80 shadow-2xs">
+                <button onclick="setDiffFilter('all')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentDiffFilter === 'all' ? 'bg-slate-900 text-white shadow-xs font-black' : 'text-slate-500 hover:text-slate-800'}">
                   全部 (${diffCounts['all']} 題)
                 </button>
-                <button onclick="setDiffFilter('danger')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentDiffFilter === 'danger' ? 'bg-rose-600 text-white shadow-xs font-black ring-1 ring-rose-400' : (diffCounts['danger'] === 0 ? 'text-slate-400 opacity-60' : 'text-rose-600 hover:text-rose-700')}">
+                <button onclick="setDiffFilter('danger')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentDiffFilter === 'danger' ? 'bg-rose-600 text-white shadow-xs font-black' : (diffCounts['danger'] === 0 ? 'text-slate-400 opacity-60' : 'text-rose-600 hover:text-rose-700')}">
                   重災(&lt;50%) (${diffCounts['danger']} 題)
                 </button>
-                <button onclick="setDiffFilter('warning')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentDiffFilter === 'warning' ? 'bg-amber-500 text-white shadow-xs font-black ring-1 ring-amber-400' : (diffCounts['warning'] === 0 ? 'text-slate-400 opacity-60' : 'text-amber-600 hover:text-amber-700')}">
+                <button onclick="setDiffFilter('warning')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentDiffFilter === 'warning' ? 'bg-amber-500 text-white shadow-xs font-black' : (diffCounts['warning'] === 0 ? 'text-slate-400 opacity-60' : 'text-amber-600 hover:text-amber-700')}">
                   警戒 (${diffCounts['warning']} 題)
                 </button>
-                <button onclick="setDiffFilter('safe')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentDiffFilter === 'safe' ? 'bg-emerald-600 text-white shadow-xs font-black ring-1 ring-emerald-400' : (diffCounts['safe'] === 0 ? 'text-slate-400 opacity-60' : 'text-emerald-600 hover:text-emerald-700')}">
+                <button onclick="setDiffFilter('safe')" class="px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${currentDiffFilter === 'safe' ? 'bg-emerald-600 text-white shadow-xs font-black' : (diffCounts['safe'] === 0 ? 'text-slate-400 opacity-60' : 'text-emerald-600 hover:text-emerald-700')}">
                   穩固 (${diffCounts['safe']} 題)
                 </button>
               </div>
             </div>
-          </div>
 
-          <!-- Questions Cards List -->
-          <div class="space-y-4 pt-1">
-            ${questionsHtml}
+            <!-- Questions Cards List -->
+            <div class="space-y-4 pt-1">
+              ${questionsHtml}
+            </div>
+
           </div>
-        </div>
+        `}
       `;
     }
 
