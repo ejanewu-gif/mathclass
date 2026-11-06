@@ -14,12 +14,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
 
-    const ASSET_CACHE_BUST = '?v=20261106_v2';
-    function withCacheBust(url) {
-      if (!url) return '';
-      return url.includes('?') ? url : (url + ASSET_CACHE_BUST);
-    }
-
     tailwind.config = {
       theme: {
         extend: {
@@ -753,7 +747,7 @@
   <!-- Embed Master Database JSON -->
   <script>
 
-    const ASSET_CACHE_BUST = '?v=20261106_v2';
+    var ASSET_CACHE_BUST = '?v=20261106_v2';
     function withCacheBust(url) {
       if (!url) return '';
       return url.includes('?') ? url : (url + ASSET_CACHE_BUST);
