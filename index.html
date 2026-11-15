@@ -527,8 +527,8 @@
         <div class="flex flex-wrap items-center gap-2 text-xs">
           <!-- Mode Switch -->
           <div class="flex items-center bg-slate-800 p-0.5 rounded-lg border border-slate-700 font-semibold">
-            <button type="button" onclick="setPrintMode('micro')" id="btnPrintModeMicro" class="px-2.5 py-1 rounded-md transition-colors text-slate-300 hover:text-white" title="精選4道易錯重災題，2x2對稱排版，1頁A4剛好印完">
-              ⚡ 課前微暖身 (精選4題·1頁)
+            <button type="button" onclick="setPrintMode('micro')" id="btnPrintModeMicro" class="px-2.5 py-1 rounded-md transition-colors text-slate-300 hover:text-white" title="課前微暖身：橫式4題 / 直式6題，剛好滿版1頁A4">
+              ⚡ 課前微暖身 (滿版1頁)
             </button>
             <button type="button" onclick="setPrintMode('full')" id="btnPrintModeFull" class="px-2.5 py-1 rounded-md transition-colors bg-emerald-600 text-white font-bold shadow-xs" title="收納本單元所有歷年考題">
               📚 單元完整複習 (全部題)
@@ -547,11 +547,11 @@
 
           <!-- Orientation Switch: Landscape / Portrait -->
           <div class="flex items-center bg-slate-800 p-0.5 rounded-lg border border-slate-700 font-semibold">
-            <button type="button" onclick="setPrintOrientation('landscape')" id="btnPrintOrientLandscape" class="px-2.5 py-1 rounded-md transition-colors bg-amber-600 text-white font-bold shadow-xs flex items-center space-x-1" title="橫向紙張：雙欄考卷標準排版（推薦首選）">
-              <span>📑</span><span>A4 橫向 (考卷)</span>
+            <button type="button" onclick="setPrintOrientation('landscape')" id="btnPrintOrientLandscape" class="px-2.5 py-1 rounded-md transition-colors bg-amber-600 text-white font-bold shadow-xs flex items-center space-x-1" title="橫向紙張：滿版4題考卷排版（大字寬版）">
+              <span>📑</span><span>A4 橫向 (滿版4題)</span>
             </button>
-            <button type="button" onclick="setPrintOrientation('portrait')" id="btnPrintOrientPortrait" class="px-2.5 py-1 rounded-md transition-colors text-slate-300 hover:text-white flex items-center space-x-1" title="直向紙張：傳統直立學習單">
-              <span>📄</span><span>A4 直向</span>
+            <button type="button" onclick="setPrintOrientation('portrait')" id="btnPrintOrientPortrait" class="px-2.5 py-1 rounded-md transition-colors text-slate-300 hover:text-white flex items-center space-x-1" title="直向紙張：六宮格滿版6題（極致省紙無留白）">
+              <span>📄</span><span>A4 直向 (滿版6題)</span>
             </button>
           </div>
 
@@ -1823,16 +1823,17 @@ ${unit.tip}
       if (unitTagEl) unitTagEl.innerText = `${gradeNames[currentGrade]}年級 ${currentPublisher}版 · 單元${unit.num} ${unit.name}`;
 
       const isLandscape = currentPrintOrientation === 'landscape';
+      const isTwoCol = currentPrintLayout === 'two-col';
       const tipText = document.getElementById('printTipText');
       const tipSize = document.getElementById('printTipSize');
       const tipBar = document.getElementById('printTipBar');
       if (tipText) {
         tipText.innerHTML = isLandscape 
-          ? `<strong>列印完美設定提醒：</strong>已自動為您指定<strong>「A4 橫向 (297×210mm)」</strong>，送印時系統將自動對應橫向考卷版面，無須手動調整！`
-          : `<strong>列印完美設定提醒：</strong>已自動為您指定<strong>「A4 直向 (210×297mm)」</strong>，送印時系統將自動對應直立學習單版面！`;
+          ? `<strong>列印完美設定提醒：</strong>已自動為您指定<strong>「A4 橫向滿版 (297×210mm)」</strong>，每頁精選 4 題大字大圖與寬廣算式空間，送印自動橫向！`
+          : `<strong>列印完美設定提醒：</strong>已自動為您指定<strong>「A4 直向滿版 (210×297mm)」</strong>，每頁六宮格 6 題，充分利用紙張上下空間不留白，極致省紙！`;
       }
       if (tipSize) {
-        tipSize.innerText = isLandscape ? '標準 A4 橫向 (297×210mm)' : '標準 A4 直向 (210×297mm)';
+        tipSize.innerText = isLandscape ? '標準 A4 橫向滿版 (297×210mm · 每頁4題)' : '標準 A4 直向滿版 (210×297mm · 每頁6題)';
       }
       if (container) {
         container.className = isLandscape ? 'w-full max-w-[960px] select-text transition-all' : 'w-full max-w-[800px] select-text transition-all';
@@ -1841,11 +1842,22 @@ ${unit.tip}
         tipBar.className = isLandscape ? 'w-full max-w-[960px] bg-sky-950/80 border border-sky-800/60 rounded-xl px-3.5 py-2 mb-3 text-xs text-sky-200 flex items-center justify-between transition-all' : 'w-full max-w-[800px] bg-sky-950/80 border border-sky-800/60 rounded-xl px-3.5 py-2 mb-3 text-xs text-sky-200 flex items-center justify-between transition-all';
       }
 
+      // Determine questions per page:
+      // Landscape: 4 questions per page (2 rows x 2 cols, generous full-bleed layout)
+      // Portrait: 6 questions per page (3 rows x 2 cols, full height coverage, zero wasted white-space)
+      let perPage = 4;
+      if (isTwoCol) {
+        perPage = isLandscape ? 4 : 6;
+      } else {
+        perPage = isLandscape ? 2 : 3;
+      }
+
       let questions = [...(unit.past_q || [])];
       if (currentPrintMode === 'micro') {
+        const microCount = perPage; // Exactly 1 full-bleed page!
         questions = questions
           .sort((a, b) => a.rate - b.rate)
-          .slice(0, 4)
+          .slice(0, microCount)
           .sort((a, b) => b.rate - a.rate);
       } else {
         questions = questions.sort((a, b) => a.year.localeCompare(b.year) || a.q - b.q);
@@ -1856,17 +1868,8 @@ ${unit.tip}
         return;
       }
 
-      const isTwoCol = currentPrintLayout === 'two-col';
-      const subtitle = currentPrintMode === 'micro' ? '課前先備 5~8 分鐘微暖身測驗卷 (精選4題)' : '單元歷年學力檢測真題複習卷';
-      const timeLimit = currentPrintMode === 'micro' ? '5~8分鐘' : '15分鐘';
-
-      // Group questions into strict pages:
-      let perPage = 4;
-      if (currentPrintMode === 'micro' && isTwoCol) {
-        perPage = 4;
-      } else if (!isTwoCol) {
-        perPage = 2;
-      }
+      const subtitle = currentPrintMode === 'micro' ? `課前先備微暖身診斷卷 (精選${questions.length}題·滿版1頁)` : '單元歷年學力檢測真題複習卷';
+      const timeLimit = currentPrintMode === 'micro' ? (isLandscape ? '5~8分鐘' : '8~10分鐘') : '15~20分鐘';
 
       const pages = [];
       for (let i = 0; i < questions.length; i += perPage) {
@@ -1881,38 +1884,38 @@ ${unit.tip}
         const isFirstPage = pageNum === 1;
 
         html += `
-          <div class="print-page-wrapper" style="box-sizing: border-box; width: 100%; background: #ffffff; padding: ${isLandscape ? '12px 18px' : '18px 22px'}; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); page-break-after: always; break-after: page;">
+          <div class="print-page-wrapper" style="box-sizing: border-box; width: 100%; background: #ffffff; padding: ${isLandscape ? '12px 18px' : '14px 18px'}; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); page-break-after: always; break-after: page;">
             
             <!-- Page Header -->
             ${isFirstPage ? `
-              <div style="border-bottom: 2px solid #0f172a; padding-bottom: ${isLandscape ? '6px' : '10px'}; margin-bottom: ${isLandscape ? '8px' : '14px'};">
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: ${isLandscape ? '4px' : '8px'};">
+              <div style="border-bottom: 2px solid #0f172a; padding-bottom: ${isLandscape ? '6px' : '5px'}; margin-bottom: ${isLandscape ? '8px' : '6px'};">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: ${isLandscape ? '4px' : '3px'};">
                   <div>
-                    <div style="font-size: 11px; color: #475569; font-weight: bold; letter-spacing: 0.5px;">臺南市國小數學輔導團 · 課堂先備診斷學習單</div>
-                    <div style="font-size: ${isLandscape ? '17px' : '19px'}; font-weight: 900; color: #0f172a; margin-top: 2px;">
+                    <div style="font-size: 10px; color: #475569; font-weight: bold; letter-spacing: 0.5px;">臺南市國小數學輔導團 · 課堂先備診斷學習單</div>
+                    <div style="font-size: ${isLandscape ? '17px' : '16px'}; font-weight: 900; color: #0f172a; margin-top: 1px;">
                       ${gradeNames[currentGrade]}年級數學（${currentPublisher}版）單元 ${unit.num}：${unit.name}
                     </div>
-                    <div style="font-size: 11px; color: #0284c7; font-weight: 700; margin-top: 1px;">
+                    <div style="font-size: 10px; color: #0284c7; font-weight: 700; margin-top: 1px;">
                       【${subtitle}】· 核心概念：${unit.concept}
                     </div>
                   </div>
-                  <div style="text-align: right; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 3px 10px; background: #f8fafc;">
-                    <div style="font-size: 10px; color: #64748b; font-weight: bold;">得分 / 評語</div>
-                    <div style="font-size: 20px; font-weight: 900; color: #0f172a; min-width: 60px; height: 24px;"></div>
+                  <div style="text-align: right; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 2px 8px; background: #f8fafc;">
+                    <div style="font-size: 9px; color: #64748b; font-weight: bold;">得分 / 評語</div>
+                    <div style="font-size: 18px; font-weight: 900; color: #0f172a; min-width: 55px; height: 22px;"></div>
                   </div>
                 </div>
 
                 <!-- Student Info Fields -->
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: bold; color: #334155; padding-top: ${isLandscape ? '4px' : '8px'}; border-top: 1px dashed #cbd5e1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: bold; color: #334155; padding-top: 3px; border-top: 1px dashed #cbd5e1;">
                   <span>＿＿年＿＿班</span>
                   <span>座號：＿＿號</span>
                   <span>姓名：＿＿＿＿＿＿＿＿</span>
                   <span>建議作答時間：${timeLimit}</span>
-                  <span style="font-size: 11px; color: #64748b;">第 1 頁 / 共 ${pages.length} 頁</span>
+                  <span style="font-size: 10px; color: #64748b;">第 1 頁 / 共 ${pages.length} 頁</span>
                 </div>
               </div>
             ` : `
-              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #334155; padding-bottom: 4px; margin-bottom: 8px; font-size: 11px; font-weight: bold; color: #475569;">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #334155; padding-bottom: 3px; margin-bottom: 6px; font-size: 10px; font-weight: bold; color: #475569;">
                 <span>${gradeNames[currentGrade]}年級數學（${currentPublisher}版）單元 ${unit.num}：${unit.name} · 練習卷</span>
                 <span>姓名：＿＿＿＿＿＿＿＿（座號：＿＿）</span>
                 <span style="color: #64748b;">第 ${pageNum} 頁 / 共 ${pages.length} 頁</span>
@@ -1920,7 +1923,7 @@ ${unit.tip}
             `}
 
             <!-- Page Questions Grid -->
-            <div style="display: grid; grid-template-columns: ${isTwoCol ? 'repeat(2, minmax(0, 1fr))' : '1fr'}; gap: ${isLandscape ? (isTwoCol ? '8px 14px' : '12px') : (isTwoCol ? '12px 16px' : '18px')};">
+            <div style="display: grid; grid-template-columns: ${isTwoCol ? 'repeat(2, minmax(0, 1fr))' : '1fr'}; gap: ${isLandscape ? (isTwoCol ? '8px 14px' : '10px') : (isTwoCol ? '6px 12px' : '10px')};">
         `;
 
         pageQuestions.forEach((q, idxInPage) => {
@@ -1928,28 +1931,34 @@ ${unit.tip}
           const qFormatted = q.q < 10 ? '0' + q.q : q.q;
           const imgPath = `question_images_v2/${q.year}/3/q${qFormatted}.png`;
 
+          // Dynamic heights to guarantee 100% full-bleed and zero-overflow:
+          // Landscape (4 per page): image up to 135px, work area ~55px
+          // Portrait (6 per page): image up to 105px, work area ~38px
+          const imgMaxH = isLandscape ? (isTwoCol ? '135px' : '175px') : (isTwoCol ? '105px' : '145px');
+          const workMinH = isLandscape ? (isTwoCol ? '55px' : '65px') : (isTwoCol ? '38px' : '48px');
+
           html += `
-            <div class="q-card" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: ${isLandscape ? '6px 10px' : '10px 12px'}; background: #ffffff; page-break-inside: avoid; break-inside: avoid; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+            <div class="q-card" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: ${isLandscape ? '6px 10px' : '5px 8px'}; background: #ffffff; page-break-inside: avoid; break-inside: avoid; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
               
               <!-- Question Item Header -->
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding-bottom: 3px; border-bottom: 1px solid #f1f5f9;">
-                <div style="font-size: 11px; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 5px;">
-                  <span style="background: #0284c7; color: #fff; width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0;">${globalIdx + 1}</span>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; padding-bottom: 2px; border-bottom: 1px solid #f1f5f9;">
+                <div style="font-size: 11px; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 4px;">
+                  <span style="background: #0284c7; color: #fff; width: 17px; height: 17px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0;">${globalIdx + 1}</span>
                   <span>第 ${globalIdx + 1} 題</span>
-                  <span style="font-size: 10px; color: #64748b; font-weight: normal;">（${q.year}年考題）</span>
+                  <span style="font-size: 9px; color: #64748b; font-weight: normal;">（${q.year}年考題）</span>
                 </div>
-                <div style="font-size: 10px; font-weight: 900; color: #0369a1; background: #f0f9ff; border: 1px solid #bae6fd; padding: 1px 6px; border-radius: 4px;">
+                <div style="font-size: 10px; font-weight: 900; color: #0369a1; background: #f0f9ff; border: 1px solid #bae6fd; padding: 1px 5px; border-radius: 4px;">
                   【作答欄】：（　　）
                 </div>
               </div>
 
               <!-- Question Image Container -->
-              <div style="width: 100%; display: flex; justify-content: center; align-items: center; min-height: ${isLandscape ? '65px' : '75px'}; padding: 2px 0;">
-                <img src="${imgPath}" alt="題目${globalIdx+1}" style="max-width: 100%; height: auto; max-height: ${isLandscape ? (isTwoCol ? '120px' : '170px') : (isTwoCol ? '145px' : '210px')}; object-fit: contain;" />
+              <div style="width: 100%; display: flex; justify-content: center; align-items: center; min-height: ${isLandscape ? '65px' : '55px'}; padding: 2px 0;">
+                <img src="${imgPath}" alt="題目${globalIdx+1}" style="max-width: 100%; height: auto; max-height: ${imgMaxH}; object-fit: contain;" />
               </div>
 
               <!-- Calculation & Scratch Area -->
-              <div style="margin-top: 4px; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 3px 6px; background: #fafafa; min-height: ${isLandscape ? (isTwoCol ? '38px' : '50px') : (isTwoCol ? '48px' : '65px')};">
+              <div style="margin-top: 3px; border: 1px dashed #cbd5e1; border-radius: 4px; padding: 2px 6px; background: #fafafa; min-height: ${workMinH};">
                 <div style="font-size: 9px; color: #94a3b8; font-weight: bold;">✏️ 算式與思考空間：</div>
               </div>
 
@@ -1966,26 +1975,26 @@ ${unit.tip}
       // Teacher Answer Key Section (if enabled)
       if (includeTeacherKey) {
         html += `
-          <div class="print-page-wrapper" style="box-sizing: border-box; width: 100%; background: #ffffff; padding: ${isLandscape ? '14px 20px' : '20px 24px'}; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; page-break-after: auto; break-after: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid #0f172a;">
+          <div class="print-page-wrapper" style="box-sizing: border-box; width: 100%; background: #ffffff; padding: ${isLandscape ? '14px 20px' : '16px 20px'}; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; page-break-after: auto; break-after: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 2px solid #0f172a;">
               <div>
-                <span style="background: #e11d48; color: #fff; font-size: 11px; font-weight: 900; padding: 2px 8px; border-radius: 4px;">教師專用</span>
-                <span style="font-size: 14px; font-weight: 900; color: #0f172a; margin-left: 6px;">
+                <span style="background: #e11d48; color: #fff; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 4px;">教師專用</span>
+                <span style="font-size: 13px; font-weight: 900; color: #0f172a; margin-left: 6px;">
                   ${gradeNames[currentGrade]}年級 單元 ${unit.num}：${unit.name} · 歷年真題解答與學生錯誤診斷速查表
                 </span>
               </div>
               <span style="font-size: 10px; color: #64748b;">本頁僅供教師備課、批改及課堂檢討使用</span>
             </div>
 
-            <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 10.5px; margin-top: 4px;">
               <thead>
                 <tr style="background: #f1f5f9; text-align: left; color: #334155;">
-                  <th style="border: 1px solid #cbd5e1; padding: 5px 6px; width: 45px; text-align: center;">卷題</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 5px 6px; width: 65px; text-align: center;">真題年份</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 5px 6px; width: 65px; text-align: center;">標準答案</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 5px 6px; width: 75px; text-align: center;">全市通過率</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 5px 6px;">考核向度與概念</th>
-                  <th style="border: 1px solid #cbd5e1; padding: 5px 6px;">輔導團學生盲點診斷與常錯選項</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 4px 6px; width: 45px; text-align: center;">卷題</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 4px 6px; width: 65px; text-align: center;">真題年份</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 4px 6px; width: 65px; text-align: center;">標準答案</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 4px 6px; width: 75px; text-align: center;">全市通過率</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 4px 6px;">考核向度與概念</th>
+                  <th style="border: 1px solid #cbd5e1; padding: 4px 6px;">輔導團學生盲點診斷與常錯選項</th>
                 </tr>
               </thead>
               <tbody>
@@ -2000,12 +2009,12 @@ ${unit.tip}
 
           html += `
             <tr style="border-bottom: 1px solid #e2e8f0; ${idx % 2 === 1 ? 'background: #f8fafc;' : ''}">
-              <td style="border: 1px solid #cbd5e1; padding: 5px 6px; text-align: center; font-weight: bold; color: #0284c7;">${idx + 1}</td>
-              <td style="border: 1px solid #cbd5e1; padding: 5px 6px; text-align: center;">${q.year}年 Q${q.q}</td>
-              <td style="border: 1px solid #cbd5e1; padding: 5px 6px; text-align: center; font-weight: 900; color: #e11d48; font-size: 12px;">(${ans})</td>
-              <td style="border: 1px solid #cbd5e1; padding: 5px 6px; text-align: center; font-weight: bold; color: ${q.rate < 50 ? '#e11d48' : (q.rate < 70 ? '#d97706' : '#16a34a')};">${q.rate}%</td>
-              <td style="border: 1px solid #cbd5e1; padding: 5px 6px;">${ind}</td>
-              <td style="border: 1px solid #cbd5e1; padding: 5px 6px; color: #475569;">${qa}</td>
+              <td style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: center; font-weight: bold; color: #0284c7;">${idx + 1}</td>
+              <td style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: center;">${q.year}年 Q${q.q}</td>
+              <td style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: center; font-weight: 900; color: #e11d48; font-size: 11px;">(${ans})</td>
+              <td style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: center; font-weight: bold; color: ${q.rate < 50 ? '#e11d48' : (q.rate < 70 ? '#d97706' : '#16a34a')};">${q.rate}%</td>
+              <td style="border: 1px solid #cbd5e1; padding: 4px 6px;">${ind}</td>
+              <td style="border: 1px solid #cbd5e1; padding: 4px 6px; color: #475569;">${qa}</td>
             </tr>
           `;
         });
@@ -2022,21 +2031,23 @@ ${unit.tip}
 
     function executePrint() {
       const content = document.getElementById('printSheetPreview').innerHTML;
+      const orient = currentPrintOrientation === 'landscape' ? 'landscape' : 'portrait';
+      const pageMargin = orient === 'landscape' ? '7mm 9mm 7mm 9mm' : '9mm 12mm 9mm 12mm';
+
       let frame = document.getElementById('testSheetPrintFrame');
-      if (!frame) {
-        frame = document.createElement('iframe');
-        frame.id = 'testSheetPrintFrame';
-        frame.style.position = 'fixed';
-        frame.style.right = '0';
-        frame.style.bottom = '0';
-        frame.style.width = '0';
-        frame.style.height = '0';
-        frame.style.border = 'none';
-        document.body.appendChild(frame);
+      if (frame) {
+        document.body.removeChild(frame);
       }
 
-      const orient = currentPrintOrientation === 'landscape' ? 'landscape' : 'portrait';
-      const pageMargin = orient === 'landscape' ? '8mm 10mm 8mm 10mm' : '12mm 15mm 12mm 15mm';
+      frame = document.createElement('iframe');
+      frame.id = 'testSheetPrintFrame';
+      frame.style.position = 'fixed';
+      frame.style.left = '-9999px';
+      frame.style.top = '-9999px';
+      frame.style.width = orient === 'landscape' ? '1123px' : '794px';
+      frame.style.height = orient === 'landscape' ? '794px' : '1123px';
+      frame.style.border = 'none';
+      document.body.appendChild(frame);
 
       const frameDoc = frame.contentWindow.document;
       frameDoc.open();
@@ -2048,7 +2059,7 @@ ${unit.tip}
           <title>臺南市國小學力檢測先備真題練習卷</title>
           <style>
             @page {
-              size: A4 ${orient};
+              size: ${orient};
               margin: ${pageMargin};
             }
             * {
@@ -2060,9 +2071,10 @@ ${unit.tip}
               font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
               margin: 0;
               padding: 0;
+              width: 100%;
               background: #ffffff;
               color: #0f172a;
-              font-size: 12px;
+              font-size: 11px;
             }
             .print-page-wrapper {
               box-sizing: border-box;
