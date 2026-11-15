@@ -423,18 +423,22 @@
                       <p class="text-xs text-slate-200 leading-relaxed">
                         「請現場老師猜猜看：全臺南市這幾千名學生中，<strong>哪一個選項是最高選答率的誘答陷阱？</strong>」
                       </p>
-                      <div id="stageOptionsQuickGrid" class="grid grid-cols-2 gap-2 text-xs font-mono font-bold">
-                        <button id="guessBtn_1" onclick="selectStageGuess(1)" class="p-2.5 rounded-lg bg-black/50 hover:bg-amber-500/20 text-slate-200 border border-white/15 text-center transition flex items-center justify-center gap-1.5">
-                          <span>選項 ①</span>
+                      <div id="stageOptionsQuickGrid" class="grid grid-cols-2 gap-3 pt-1">
+                        <button id="guessBtn_1" onclick="selectStageGuess(1)" class="py-3 px-3 rounded-xl bg-slate-900/80 hover:bg-amber-500/20 text-slate-100 border-2 border-white/15 hover:border-amber-400/60 text-center transition-all flex items-center justify-center gap-2.5 shadow-md group">
+                          <span class="w-9 h-9 rounded-lg bg-amber-400/20 group-hover:bg-amber-400 text-amber-300 group-hover:text-slate-950 border border-amber-400/40 text-2xl font-black flex items-center justify-center transition-all">①</span>
+                          <span class="text-base font-black tracking-wide text-slate-200 group-hover:text-amber-200">選項 1</span>
                         </button>
-                        <button id="guessBtn_2" onclick="selectStageGuess(2)" class="p-2.5 rounded-lg bg-black/50 hover:bg-amber-500/20 text-slate-200 border border-white/15 text-center transition flex items-center justify-center gap-1.5">
-                          <span>選項 ②</span>
+                        <button id="guessBtn_2" onclick="selectStageGuess(2)" class="py-3 px-3 rounded-xl bg-slate-900/80 hover:bg-amber-500/20 text-slate-100 border-2 border-white/15 hover:border-amber-400/60 text-center transition-all flex items-center justify-center gap-2.5 shadow-md group">
+                          <span class="w-9 h-9 rounded-lg bg-amber-400/20 group-hover:bg-amber-400 text-amber-300 group-hover:text-slate-950 border border-amber-400/40 text-2xl font-black flex items-center justify-center transition-all">②</span>
+                          <span class="text-base font-black tracking-wide text-slate-200 group-hover:text-amber-200">選項 2</span>
                         </button>
-                        <button id="guessBtn_3" onclick="selectStageGuess(3)" class="p-2.5 rounded-lg bg-black/50 hover:bg-amber-500/20 text-slate-200 border border-white/15 text-center transition flex items-center justify-center gap-1.5">
-                          <span>選項 ③</span>
+                        <button id="guessBtn_3" onclick="selectStageGuess(3)" class="py-3 px-3 rounded-xl bg-slate-900/80 hover:bg-amber-500/20 text-slate-100 border-2 border-white/15 hover:border-amber-400/60 text-center transition-all flex items-center justify-center gap-2.5 shadow-md group">
+                          <span class="w-9 h-9 rounded-lg bg-amber-400/20 group-hover:bg-amber-400 text-amber-300 group-hover:text-slate-950 border border-amber-400/40 text-2xl font-black flex items-center justify-center transition-all">③</span>
+                          <span class="text-base font-black tracking-wide text-slate-200 group-hover:text-amber-200">選項 3</span>
                         </button>
-                        <button id="guessBtn_4" onclick="selectStageGuess(4)" class="p-2.5 rounded-lg bg-black/50 hover:bg-amber-500/20 text-slate-200 border border-white/15 text-center transition flex items-center justify-center gap-1.5">
-                          <span>選項 ④</span>
+                        <button id="guessBtn_4" onclick="selectStageGuess(4)" class="py-3 px-3 rounded-xl bg-slate-900/80 hover:bg-amber-500/20 text-slate-100 border-2 border-white/15 hover:border-amber-400/60 text-center transition-all flex items-center justify-center gap-2.5 shadow-md group">
+                          <span class="w-9 h-9 rounded-lg bg-amber-400/20 group-hover:bg-amber-400 text-amber-300 group-hover:text-slate-950 border border-amber-400/40 text-2xl font-black flex items-center justify-center transition-all">④</span>
+                          <span class="text-base font-black tracking-wide text-slate-200 group-hover:text-amber-200">選項 4</span>
                         </button>
                       </div>
                       <div id="stageGuessFeedback" class="text-[11px] text-amber-300 font-bold min-h-[18px] flex items-center gap-1">
@@ -28651,6 +28655,7 @@ const LEVEL_EXAMPLES_DB = {
     }
 
     function renderStageQuestion(idx) {
+      resetStageGuess();
       const card = FLIP_CARDS[idx];
       if (!card) return;
 
@@ -28692,6 +28697,41 @@ const LEVEL_EXAMPLES_DB = {
         `;
         barsContainer.appendChild(row);
       });
+    }
+
+    let currentStageGuess = null;
+
+    function selectStageGuess(num) {
+      currentStageGuess = num;
+      const optCircles = ['①', '②', '③', '④'];
+      for (let i = 1; i <= 4; i++) {
+        const btn = document.getElementById('guessBtn_' + i);
+        if (!btn) continue;
+        if (i === num) {
+          btn.className = 'py-3 px-3 rounded-xl bg-amber-500 text-slate-950 border-2 border-amber-300 text-center transition-all flex items-center justify-center gap-2.5 shadow-xl scale-105 font-black ring-2 ring-amber-300/50';
+          btn.innerHTML = `<span class="w-9 h-9 rounded-lg bg-slate-950 text-amber-300 text-2xl font-black flex items-center justify-center">${optCircles[i-1]}</span><span class="text-base font-black text-slate-950">選項 ${i}（已鎖定）</span>`;
+        } else {
+          btn.className = 'py-3 px-3 rounded-xl bg-slate-900/80 opacity-50 hover:opacity-100 text-slate-100 border-2 border-white/15 hover:border-amber-400/60 text-center transition-all flex items-center justify-center gap-2.5 shadow-md group';
+          btn.innerHTML = `<span class="w-9 h-9 rounded-lg bg-amber-400/20 group-hover:bg-amber-400 text-amber-300 group-hover:text-slate-950 border border-amber-400/40 text-2xl font-black flex items-center justify-center transition-all">${optCircles[i-1]}</span><span class="text-base font-black tracking-wide text-slate-200">選項 ${i}</span>`;
+        }
+      }
+      const fb = document.getElementById('stageGuessFeedback');
+      if (fb) {
+        fb.innerHTML = `<span>🎯 現場選定：<strong>選項 ${optCircles[num-1]}</strong>！請點擊下方「點擊翻牌」揭曉全市實測答對率與誘答盲點！</span>`;
+      }
+    }
+
+    function resetStageGuess() {
+      currentStageGuess = null;
+      const optCircles = ['①', '②', '③', '④'];
+      for (let i = 1; i <= 4; i++) {
+        const btn = document.getElementById('guessBtn_' + i);
+        if (!btn) continue;
+        btn.className = 'py-3 px-3 rounded-xl bg-slate-900/80 hover:bg-amber-500/20 text-slate-100 border-2 border-white/15 hover:border-amber-400/60 text-center transition-all flex items-center justify-center gap-2.5 shadow-md group';
+        btn.innerHTML = `<span class="w-9 h-9 rounded-lg bg-amber-400/20 group-hover:bg-amber-400 text-amber-300 group-hover:text-slate-950 border border-amber-400/40 text-2xl font-black flex items-center justify-center transition-all">${optCircles[i-1]}</span><span class="text-base font-black tracking-wide text-slate-200 group-hover:text-amber-200">選項 ${i}</span>`;
+      }
+      const fb = document.getElementById('stageGuessFeedback');
+      if (fb) fb.innerHTML = '';
     }
 
     function flipStageCard() {
