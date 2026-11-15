@@ -28619,6 +28619,13 @@ const LEVEL_EXAMPLES_DB = {
       renderUnitsList();
       setCohortFocus('G6');
       renderStageQuestion(0);
+      
+      // 確保命題三層次縮圖直接使用 Base64 內嵌圖檔，徹底避免外部路徑破圖
+      if (typeof LEVEL_EXAMPLES_DB !== 'undefined') {
+        if (LEVEL_EXAMPLES_DB.cu && document.getElementById('cuPreviewImg')) document.getElementById('cuPreviewImg').src = LEVEL_EXAMPLES_DB.cu.img;
+        if (LEVEL_EXAMPLES_DB.pk && document.getElementById('pkPreviewImg')) document.getElementById('pkPreviewImg').src = LEVEL_EXAMPLES_DB.pk.img;
+        if (LEVEL_EXAMPLES_DB.ps && document.getElementById('psPreviewImg')) document.getElementById('psPreviewImg').src = LEVEL_EXAMPLES_DB.ps.img;
+      }
     };
 
     // Switch Tabs
