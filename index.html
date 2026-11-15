@@ -2417,7 +2417,7 @@ ${qData.rem || '（無官方補救文字）'}
         if (qData) {
           const cog = qData.cognitive || qRef.level || '';
           if (cog.includes('概念') || cog.includes('CU')) cuCount++;
-          else if (cog.includes('程序') || cog.includes('PE')) peCount++;
+          else if (cog.includes('程序') || cog.includes('P.K.') || cog.includes('PE')) peCount++;
           else if (cog.includes('解題') || cog.includes('PS')) psCount++;
 
           if (typeof qData.rate === 'number') {
@@ -2600,7 +2600,7 @@ ${qData.rem || '（無官方補救文字）'}
               <div class="flex items-center space-x-2">
                 <span class="text-xs px-2.5 py-1 rounded-lg border font-bold ${rateBadge}">答對率：${r}${r !== '-' ? '%' : ''}</span>
                 <span class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 font-bold text-slate-700">鑑別度：${d}</span>
-                <button type="button" onclick="copyAiPromptForIndicatorQ('${g}', '${y}', '${qn}')" class="px-3 py-1 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs shadow-xs transition-all flex items-center space-x-1 cursor-pointer active:scale-95">
+                <button type="button" onclick=\"copyAiPromptForIndicatorQ('${g}', '${y}', '${qn}', '${code}')\" class="px-3 py-1 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs shadow-xs transition-all flex items-center space-x-1 cursor-pointer active:scale-95">
                   <span>🤖 一鍵複製 AI 處方 Prompt</span>
                 </button>
               </div>
@@ -2690,48 +2690,116 @@ ${qData.rem || '（無官方補救文字）'}
       }
     }
 
-    function copyAiPromptForIndicatorQ(grade, year, qnum) {
-      const qData = (MASTER_DB.past_years && MASTER_DB.past_years[grade] && MASTER_DB.past_years[grade][year] && MASTER_DB.past_years[grade][year][qnum]) || null;
-      if (!qData) return;
+    function copyAiPromptForIndicatorQ(grade, year, qnum, indicatorCode) {
+      try {
+        const g = String(grade);
+        const yStr = String(year);
+        const qStr = String(qnum);
+        const qData = (MASTER_DB.past_years && MASTER_DB.past_years[g] && MASTER_DB.past_years[g][yStr] && MASTER_DB.past_years[g][yStr][qStr]) || null;
+        if (!qData) {
+          if (typeof showToast === 'function') {
+            showToast('⚠️ 找不到該題目詳細數據');
+          } else {
+            alert('⚠️ 找不到該題目詳細數據');
+          }
+          return;
+        }
 
-      const rate = qData.rate !== undefined && qData.rate !== null ? (qData.rate > 1 ? qData.rate : (qData.rate * 100).toFixed(1)) : '-';
-      const prompt = `你是一位專業的國小數學素養導向診斷與教學設計專家。請針對以下臺南市學力檢測真實試題進行「錯因診斷與精準補救教學引導」：
+        const gradeLabel = (typeof gradeNames !== 'undefined' && gradeNames[g]) ? `${gradeNames[g]}年級` : `${g}年級`;
+        const indCode = indicatorCode || qData.indicator_code || qData.indicator || '';
+        let indName = '';
+        if (indCode && typeof INDICATOR_BUNDLE !== 'undefined' && INDICATOR_BUNDLE.META && INDICATOR_BUNDLE.META[indCode]) {
+          indName = INDICATOR_BUNDLE.META[indCode];
+        }
 
-【試題基本資訊】
-- 檢測年級：國小${gradeNames[grade]}年級
-- 學年度與題號：${year}學年度 第 ${qnum} 題
-- 對應 108 課綱指標：${qData.indicator || '-'}
-- 認知歷程向度：${qData.cognitive || '-'}
-- 全市答對率：${rate}%（鑑別度：${qData.disc || '-'}）
-- 官方標準答案：選項 (${qData.ans || '-'})
+        // Format options and find top distractor
+        let optionsText = '';
+        let topDistractor = null;
+        let maxLowRate = -1;
+        if (qData.options && typeof qData.options === 'object') {
+          optionsText = Object.keys(qData.options).map(optKey => {
+            const opt = qData.options[optKey];
+            const isAns = opt.is_ans;
+            const ratePct = Math.round((opt.rate || 0) * 100);
+            const lowPct = Math.round((opt.low || 0) * 100);
+            const highPct = Math.round((opt.high || 0) * 100);
+            if (!isAns && opt.low > maxLowRate) {
+              maxLowRate = opt.low;
+              topDistractor = { key: optKey, lowPct: lowPct, ratePct: ratePct };
+            }
+            return `  - 選項 (${optKey}) ${isAns ? '【標準正解】' : '【誘答選項】'}：全體選答率 ${ratePct}%（低分組選答率 ${lowPct}%、高分組選答率 ${highPct}%）`;
+          }).join('\n');
+        }
 
-【官方試題分析與盲點】
-${qData.qa || '學生在面對本題幾何或概念表徵時容易產生混淆。'}
+        let distractorNote = '';
+        if (topDistractor && topDistractor.lowPct >= 15) {
+          distractorNote = `特別警示：低分組學生有高達 ${topDistractor.lowPct}% 掉入選項 (${topDistractor.key}) 的誘答陷阱！`;
+        }
 
-【官方補救建議】
-${qData.rem || '建議透過具體教具、圖解表徵或情境引導釐清核心概念。'}
+        // Public image URLs on GitHub Pages (high-res question card & remediation diagrams)
+        const imgUrl = qData.img ? (qData.img.startsWith('http') ? qData.img : `https://ejanewu-gif.github.io/mathclass/${qData.img}`) : '';
+        const remImgUrl = qData.rem_img ? (qData.rem_img.startsWith('http') ? qData.rem_img : `https://ejanewu-gif.github.io/mathclass/${qData.rem_img}`) : '';
 
-【請為教師提供以下 3 項即用型教學策略】：
-1. 學生選錯該選項的最核心迷思根源是什麼？（從概念表徵層面剖析）
-2. 課前 3 分鐘微暖身提問：設計 1 道能立刻檢驗學生此先備能力的小問題與師生對話引導。
-3. 課中差異化補救活動：提供一個具體操作、圖像化或鷹架策略，幫助低分組學生建立正確心智模型。`;
+        const ratePct = qData.rate !== undefined && qData.rate !== null ? (qData.rate > 1 ? qData.rate : (qData.rate * 100).toFixed(1)) : '-';
+        const discVal = qData.disc !== undefined && qData.disc !== null ? qData.disc : '-';
 
-      navigator.clipboard.writeText(prompt).then(() => {
-        alert(`已成功複製【${year}學年度 ${gradeNames[grade]}年級 第${qnum}題】專屬 AI 診斷處方 Prompt！\n\n可直接貼入 ChatGPT / Gemini / Claude 進行共備與生成個別化補救方案。`);
-      }).catch(err => {
-        promptCopyFallback(prompt);
-      });
-    }
+        const promptText = `【角色設定】
+你是一位精通臺灣 108 課綱國小數學與臺南市學力檢測診斷的資深國小數學輔導員。請協助我（任教班級導師）針對我班上學生的課綱指標弱點，生成「課前 3~5 分鐘能直接說給學生聽、做給學生看」的精準教學處方。
 
-    // Global ESC key listener to close modals
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' || e.keyCode === 27) {
-        closeModal();
-        closeImageLightbox();
-        closePrintModal();
+【檢測題目背景與真實數據】
+- 檢測年級與考題：國小${gradeLabel} ${year}學年度 第 ${qnum} 題
+- 對應 108 課綱指標：${indCode ? indCode + ' ' + indName : (qData.indicator || '未提供')}
+- 認知歷程向度：${qData.cognitive || '程序執行'}
+- 全市大數據：整體通過率 ${ratePct}%，鑑別度 ${discVal}，標準答案為第 (${qData.ans || '-'}) 選項
+- 題目線上高解析原圖（可直接點開檢視或貼圖至 AI，讓 AI 精確辨識題意、圖表與選項）：
+  ${imgUrl}
+${remImgUrl ? `- 官方原版補救教學圖解：\n  ${remImgUrl}\n` : ''}- 四選項高低分組作答反應率：
+${optionsText || '  （無詳細選項數據）'}
+${distractorNote ? '- 誘答陷阱剖析：' + distractorNote : ''}
+
+【官方輔導團深度試題分析（題目情境與學生迷思盲點）】
+${qData.qa || '（無官方分析文字）'}
+
+【官方輔導團教材地位與補救教學指引】
+${qData.rem || '（無官方補救文字）'}
+
+【我的班級現場情境】
+我們班在學力檢測或平時診斷中，這題的答對率低於預期，許多學生掉入了上述的特定誘答選項。
+
+【請為我生成「明天走進教室就能直接用」的課堂教學處方】
+1. 【30 秒白話診斷】：用 2~3 句話點破學生在心智模型上的致命盲點（到底卡在什麼認知觀念？為何會被特定選項誘答？）。
+2. 【課前 3~5 分鐘防雷提問（極簡對話話術）】：請設計 1 組在進入該單元時，老師可以直接在黑板上畫圖、拿教具或在投影機上提問的「微暖身防雷話術」（請以對話劇本方式呈現，包含老師提問、預期學生錯誤直覺回答、以及老師的引導追問）。
+3. 【班級雙軌差異化任務】：
+   - 待止血組（基礎組）：1 個能動手操作檢驗、穩固底層觀念的極簡小任務。
+   - 挑戰組（精熟組）：1 個能深化辨析、避免再次掉坑的延伸思考題。
+（請以口語化、具體條列、不講空泛理論的方式呈現，方便老師直接印出或帶著進教室教！）`;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(promptText).then(() => {
+            if (typeof showToast === 'function') {
+              showToast(`🤖 已複製【${year}學年度 ${gradeLabel} 第${qnum}題】專屬 AI 處方 Prompt！含題卡原圖網址，可直接貼至 ChatGPT / Gemini`);
+            } else {
+              alert(`已成功複製【${year}學年度 ${gradeLabel} 第${qnum}題】專屬 AI 診斷處方 Prompt（含題卡原圖連結）！\n\n可直接貼入 ChatGPT / Gemini / Claude 進行共備與生成個別化補救方案。`);
+            }
+          }).catch(err => {
+            if (typeof fallbackCopyText === 'function') {
+              fallbackCopyText(promptText, year, qnum);
+            } else {
+              prompt('請複製以下 Prompt：', promptText);
+            }
+          });
+        } else {
+          if (typeof fallbackCopyText === 'function') {
+            fallbackCopyText(promptText, year, qnum);
+          } else {
+            prompt('請複製以下 Prompt：', promptText);
+          }
+        }
+      } catch (err) {
+        console.error('copyAiPromptForIndicatorQ error:', err);
+        alert('複製失敗：' + err.message);
       }
-    });
-
+    }
 
     function updateExamDownloadButton() {
       const btn = document.getElementById('btnDownloadExamZip');
