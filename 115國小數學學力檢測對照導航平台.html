@@ -2712,6 +2712,16 @@ ${qData.rem || '（無官方補救文字）'}
           indName = INDICATOR_BUNDLE.META[indCode];
         }
 
+        // Alignment (Prerequisite, Current, Extension)
+        let alignText = '';
+        if (typeof INDICATOR_BUNDLE !== 'undefined' && INDICATOR_BUNDLE.ALIGNMENTS && INDICATOR_BUNDLE.ALIGNMENTS[indCode]) {
+          const align = INDICATOR_BUNDLE.ALIGNMENTS[indCode];
+          const pre = align.prereq ? `${align.prereq.code}（${align.prereq.name || align.prereq.content || ''}）` : '無特別指定';
+          const cur = align.current ? `${align.current.code}（${align.current.name || align.current.content || ''}）` : indCode;
+          const ext = align.extension ? `${align.extension.code}（${align.extension.name || align.extension.content || ''}）` : '無特別指定';
+          alignText = `【108 課綱教材地位縱向鏈結】\n- 課前打底（先備知識）：${pre}\n- 本單元所需（核心指標）：${cur}\n- 後續進階（延伸知識）：${ext}\n\n`;
+        }
+
         // Format options and find top distractor
         let optionsText = '';
         let topDistractor = null;
@@ -2744,42 +2754,45 @@ ${qData.rem || '（無官方補救文字）'}
         const discVal = qData.disc !== undefined && qData.disc !== null ? qData.disc : '-';
 
         const promptText = `【角色設定】
-你是一位精通臺灣 108 課綱國小數學與臺南市學力檢測診斷的資深國小數學輔導員。請協助我（任教班級導師）針對我班上學生的課綱指標弱點，生成「課前 3~5 分鐘能直接說給學生聽、做給學生看」的精準教學處方。
+你是一位精通臺灣 108 課綱數學領域課程手冊、學力檢測診斷與素養導向命題架構的資深數學輔導員。請針對以下歷年真實檢測數據與指標規範，為教師提供深度的「指標概念解構、表徵鷹架與素養遷移設計」：
 
 【檢測題目背景與真實數據】
 - 檢測年級與考題：國小${gradeLabel} ${year}學年度 第 ${qnum} 題
 - 對應 108 課綱指標：${indCode ? indCode + ' ' + indName : (qData.indicator || '未提供')}
 - 認知歷程向度：${qData.cognitive || '程序執行'}
 - 全市大數據：整體通過率 ${ratePct}%，鑑別度 ${discVal}，標準答案為第 (${qData.ans || '-'}) 選項
-- 題目線上高解析原圖（可直接點開檢視或貼圖至 AI，讓 AI 精確辨識題意、圖表與選項）：
+- 題目線上高解析原圖（請 AI 仔細辨識題幹圖表、情境敘述與選項細節）：
   ${imgUrl}
-${remImgUrl ? `- 官方原版補救教學圖解：\n  ${remImgUrl}\n` : ''}- 四選項高低分組作答反應率：
+${remImgUrl ? `- 官方原版補救教學圖解：\n  ${remImgUrl}\n` : ''}- 四選項選答率分佈與高低分組反應比率：
 ${optionsText || '  （無詳細選項數據）'}
 ${distractorNote ? '- 誘答陷阱剖析：' + distractorNote : ''}
 
-【官方輔導團深度試題分析（題目情境與學生迷思盲點）】
+${alignText}【官方輔導團深度試題分析（盲點剖析）】
 ${qData.qa || '（無官方分析文字）'}
 
 【官方輔導團教材地位與補救教學指引】
 ${qData.rem || '（無官方補救文字）'}
 
-【我的班級現場情境】
-我們班在學力檢測或平時診斷中，這題的答對率低於預期，許多學生掉入了上述的特定誘答選項。
+【研討情境與研發目標】
+教師社群／備課教師正針對本指標進行深度共備與素養診斷。我們希望跳脫單純的「改題目、刷題庫」，從本質上突破學生的迷思概念，建構扎實的數學心智模型。
 
-【請為我生成「明天走進教室就能直接用」的課堂教學處方】
-1. 【30 秒白話診斷】：用 2~3 句話點破學生在心智模型上的致命盲點（到底卡在什麼認知觀念？為何會被特定選項誘答？）。
-2. 【課前 3~5 分鐘防雷提問（極簡對話話術）】：請設計 1 組在進入該單元時，老師可以直接在黑板上畫圖、拿教具或在投影機上提問的「微暖身防雷話術」（請以對話劇本方式呈現，包含老師提問、預期學生錯誤直覺回答、以及老師的引導追問）。
-3. 【班級雙軌差異化任務】：
-   - 待止血組（基礎組）：1 個能動手操作檢驗、穩固底層觀念的極簡小任務。
-   - 挑戰組（精熟組）：1 個能深化辨析、避免再次掉坑的延伸思考題。
-（請以口語化、具體條列、不講空泛理論的方式呈現，方便老師直接印出或帶著進教室教！）`;
+【請為教師進行以下 4 項「指標級」深度教學研發與課堂處方】：
+1. 【教材地位縱向斷層剖析】：
+   結合本指標的先備與後續延伸知識，深入剖析低分組學生掉入該誘答選項的核心心智模型缺陷（到底欠缺哪一種底層數學表徵？若未打穩，進入高年級會面臨什麼學習障礙？）。
+2. 【Bruner 三階段表徵轉化策略】：
+   提供「具體物操作 ➔ 視覺結構圖表 ➔ 抽象符號算式」的三階段教學鷹架，說明如何幫助低分組學生跨越具體到抽象的認知鴻溝。
+3. 【課堂認知衝突對話（概念卡通微劇本）】：
+   根據上述作答數據中的主要誘答選項，編寫一組 3 位學生各自堅持不同選項的「概念爭辯微劇本」（包含錯誤直覺與正確說理），並設計 1 個能引爆全班小組辯證思辨的核心提問。
+4. 【素養導向變形任務設計】：
+   以本指標核心能力為本，生成 1 道「生活情境逆向思考題」或「找錯題」（需打破傳統四選一形式，著重概念遷移與說理探究）。
+（請以結構化、條理分明、兼具理論深度與實踐可行性的專業語氣呈現，供教師共備研討直接使用！）`;
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(promptText).then(() => {
             if (typeof showToast === 'function') {
-              showToast(`🤖 已複製【${year}學年度 ${gradeLabel} 第${qnum}題】專屬 AI 處方 Prompt！含題卡原圖網址，可直接貼至 ChatGPT / Gemini`);
+              showToast(`🔬 已複製【${year}學年度 ${gradeLabel} 第${qnum}題】指標深究與共備 Prompt！含題卡原圖，可貼至 AI 研討`);
             } else {
-              alert(`已成功複製【${year}學年度 ${gradeLabel} 第${qnum}題】專屬 AI 診斷處方 Prompt（含題卡原圖連結）！\n\n可直接貼入 ChatGPT / Gemini / Claude 進行共備與生成個別化補救方案。`);
+              alert(`已成功複製【${year}學年度 ${gradeLabel} 第${qnum}題】指標深究與共備 Prompt（含題卡原圖連結）！\n\n可直接貼入 ChatGPT / Gemini / Claude 進行深度研發與素養教學設計。`);
             }
           }).catch(err => {
             if (typeof fallbackCopyText === 'function') {
