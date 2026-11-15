@@ -1798,8 +1798,29 @@ ${unit.tip}
       renderPrintSheet();
     }
 
+    function syncGlobalPrintOrientation(orient) {
+      let printStyle = document.getElementById('globalPrintPageDirection');
+      if (!printStyle) {
+        printStyle = document.createElement('style');
+        printStyle.id = 'globalPrintPageDirection';
+        document.head.appendChild(printStyle);
+      }
+      if (orient === 'landscape') {
+        printStyle.innerHTML = `
+          @page { size: A4 landscape !important; margin: 7mm 9mm !important; }
+          @media print { @page { size: A4 landscape !important; margin: 7mm 9mm !important; } }
+        `;
+      } else {
+        printStyle.innerHTML = `
+          @page { size: A4 portrait !important; margin: 8mm 10mm !important; }
+          @media print { @page { size: A4 portrait !important; margin: 8mm 10mm !important; } }
+        `;
+      }
+    }
+
     function setPrintOrientation(orient) {
       currentPrintOrientation = orient;
+      syncGlobalPrintOrientation(orient);
       const btnLand = document.getElementById('btnPrintOrientLandscape');
       const btnPort = document.getElementById('btnPrintOrientPortrait');
       if (btnLand && btnPort) {
@@ -1824,6 +1845,8 @@ ${unit.tip}
 
       const isLandscape = currentPrintOrientation === 'landscape';
       const isTwoCol = currentPrintLayout === 'two-col';
+      syncGlobalPrintOrientation(currentPrintOrientation);
+
       const tipText = document.getElementById('printTipText');
       const tipSize = document.getElementById('printTipSize');
       const tipBar = document.getElementById('printTipBar');
@@ -1876,6 +1899,14 @@ ${unit.tip}
         pages.push(questions.slice(i, i + perPage));
       }
 
+      // Precise mm heights to fill 97% of printable A4 paper
+      const cardHeight = isLandscape ? '80mm' : '78mm';
+      const imgMaxH = isLandscape ? (isTwoCol ? '45mm' : '65mm') : (isTwoCol ? '41mm' : '55mm');
+      const workMinH = isLandscape ? '23mm' : '21mm';
+      const gridGap = isLandscape ? (isTwoCol ? '4mm 6mm' : '6mm') : (isTwoCol ? '3.5mm 5mm' : '5mm');
+      const pagePadding = isLandscape ? '7mm 10mm' : '8mm 10mm';
+      const pageMinHeight = isLandscape ? '194mm' : '278mm';
+
       let html = '';
 
       // Render Each Printable Page
@@ -1884,46 +1915,48 @@ ${unit.tip}
         const isFirstPage = pageNum === 1;
 
         html += `
-          <div class="print-page-wrapper" style="box-sizing: border-box; width: 100%; background: #ffffff; padding: ${isLandscape ? '12px 18px' : '14px 18px'}; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); page-break-after: always; break-after: page;">
+          <div class="print-page-wrapper" style="box-sizing: border-box; width: 100%; min-height: ${pageMinHeight}; background: #ffffff; padding: ${pagePadding}; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); page-break-after: always; break-after: page; display: flex; flex-direction: column; justify-content: space-between;">
             
-            <!-- Page Header -->
-            ${isFirstPage ? `
-              <div style="border-bottom: 2px solid #0f172a; padding-bottom: ${isLandscape ? '6px' : '5px'}; margin-bottom: ${isLandscape ? '8px' : '6px'};">
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: ${isLandscape ? '4px' : '3px'};">
-                  <div>
-                    <div style="font-size: 10px; color: #475569; font-weight: bold; letter-spacing: 0.5px;">臺南市國小數學輔導團 · 課堂先備診斷學習單</div>
-                    <div style="font-size: ${isLandscape ? '17px' : '16px'}; font-weight: 900; color: #0f172a; margin-top: 1px;">
-                      ${gradeNames[currentGrade]}年級數學（${currentPublisher}版）單元 ${unit.num}：${unit.name}
+            <!-- Page Top Container -->
+            <div style="flex-shrink: 0;">
+              ${isFirstPage ? `
+                <div style="border-bottom: 2px solid #0f172a; padding-bottom: ${isLandscape ? '5px' : '4px'}; margin-bottom: ${isLandscape ? '6px' : '5px'};">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: ${isLandscape ? '3px' : '2px'};">
+                    <div>
+                      <div style="font-size: 10px; color: #475569; font-weight: bold; letter-spacing: 0.5px;">臺南市國小數學輔導團 · 課堂先備診斷學習單</div>
+                      <div style="font-size: ${isLandscape ? '17px' : '16px'}; font-weight: 900; color: #0f172a; margin-top: 1px;">
+                        ${gradeNames[currentGrade]}年級數學（${currentPublisher}版）單元 ${unit.num}：${unit.name}
+                      </div>
+                      <div style="font-size: 10px; color: #0284c7; font-weight: 700; margin-top: 1px;">
+                        【${subtitle}】· 核心概念：${unit.concept}
+                      </div>
                     </div>
-                    <div style="font-size: 10px; color: #0284c7; font-weight: 700; margin-top: 1px;">
-                      【${subtitle}】· 核心概念：${unit.concept}
+                    <div style="text-align: right; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 2px 8px; background: #f8fafc;">
+                      <div style="font-size: 9px; color: #64748b; font-weight: bold;">得分 / 評語</div>
+                      <div style="font-size: 18px; font-weight: 900; color: #0f172a; min-width: 55px; height: 20px;"></div>
                     </div>
                   </div>
-                  <div style="text-align: right; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 2px 8px; background: #f8fafc;">
-                    <div style="font-size: 9px; color: #64748b; font-weight: bold;">得分 / 評語</div>
-                    <div style="font-size: 18px; font-weight: 900; color: #0f172a; min-width: 55px; height: 22px;"></div>
-                  </div>
-                </div>
 
-                <!-- Student Info Fields -->
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: bold; color: #334155; padding-top: 3px; border-top: 1px dashed #cbd5e1;">
-                  <span>＿＿年＿＿班</span>
-                  <span>座號：＿＿號</span>
-                  <span>姓名：＿＿＿＿＿＿＿＿</span>
-                  <span>建議作答時間：${timeLimit}</span>
-                  <span style="font-size: 10px; color: #64748b;">第 1 頁 / 共 ${pages.length} 頁</span>
+                  <!-- Student Info Fields -->
+                  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; font-weight: bold; color: #334155; padding-top: 3px; border-top: 1px dashed #cbd5e1;">
+                    <span>＿＿年＿＿班</span>
+                    <span>座號：＿＿號</span>
+                    <span>姓名：＿＿＿＿＿＿＿＿</span>
+                    <span>建議作答時間：${timeLimit}</span>
+                    <span style="font-size: 10px; color: #64748b;">第 1 頁 / 共 ${pages.length} 頁</span>
+                  </div>
                 </div>
-              </div>
-            ` : `
-              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #334155; padding-bottom: 3px; margin-bottom: 6px; font-size: 10px; font-weight: bold; color: #475569;">
-                <span>${gradeNames[currentGrade]}年級數學（${currentPublisher}版）單元 ${unit.num}：${unit.name} · 練習卷</span>
-                <span>姓名：＿＿＿＿＿＿＿＿（座號：＿＿）</span>
-                <span style="color: #64748b;">第 ${pageNum} 頁 / 共 ${pages.length} 頁</span>
-              </div>
-            `}
+              ` : `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #334155; padding-bottom: 3px; margin-bottom: 5px; font-size: 10px; font-weight: bold; color: #475569;">
+                  <span>${gradeNames[currentGrade]}年級數學（${currentPublisher}版）單元 ${unit.num}：${unit.name} · 練習卷</span>
+                  <span>姓名：＿＿＿＿＿＿＿＿（座號：＿＿）</span>
+                  <span style="color: #64748b;">第 ${pageNum} 頁 / 共 ${pages.length} 頁</span>
+                </div>
+              `}
+            </div>
 
             <!-- Page Questions Grid -->
-            <div style="display: grid; grid-template-columns: ${isTwoCol ? 'repeat(2, minmax(0, 1fr))' : '1fr'}; gap: ${isLandscape ? (isTwoCol ? '8px 14px' : '10px') : (isTwoCol ? '6px 12px' : '10px')};">
+            <div style="flex: 1; display: grid; grid-template-columns: ${isTwoCol ? 'repeat(2, minmax(0, 1fr))' : '1fr'}; gap: ${gridGap}; align-content: space-between;">
         `;
 
         pageQuestions.forEach((q, idxInPage) => {
@@ -1931,17 +1964,11 @@ ${unit.tip}
           const qFormatted = q.q < 10 ? '0' + q.q : q.q;
           const imgPath = `question_images_v2/${q.year}/3/q${qFormatted}.png`;
 
-          // Dynamic heights to guarantee 100% full-bleed and zero-overflow:
-          // Landscape (4 per page): image up to 135px, work area ~55px
-          // Portrait (6 per page): image up to 105px, work area ~38px
-          const imgMaxH = isLandscape ? (isTwoCol ? '135px' : '175px') : (isTwoCol ? '105px' : '145px');
-          const workMinH = isLandscape ? (isTwoCol ? '55px' : '65px') : (isTwoCol ? '38px' : '48px');
-
           html += `
-            <div class="q-card" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: ${isLandscape ? '6px 10px' : '5px 8px'}; background: #ffffff; page-break-inside: avoid; break-inside: avoid; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+            <div class="q-card" style="height: ${cardHeight}; border: 1px solid #cbd5e1; border-radius: 6px; padding: 2.5mm 3.5mm; background: #ffffff; page-break-inside: avoid; break-inside: avoid; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
               
               <!-- Question Item Header -->
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; padding-bottom: 2px; border-bottom: 1px solid #f1f5f9;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5mm; padding-bottom: 1mm; border-bottom: 1px solid #f1f5f9; flex-shrink: 0;">
                 <div style="font-size: 11px; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 4px;">
                   <span style="background: #0284c7; color: #fff; width: 17px; height: 17px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0;">${globalIdx + 1}</span>
                   <span>第 ${globalIdx + 1} 題</span>
@@ -1953,13 +1980,13 @@ ${unit.tip}
               </div>
 
               <!-- Question Image Container -->
-              <div style="width: 100%; display: flex; justify-content: center; align-items: center; min-height: ${isLandscape ? '65px' : '55px'}; padding: 2px 0;">
+              <div style="flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; min-height: 0; padding: 1mm 0; overflow: hidden;">
                 <img src="${imgPath}" alt="題目${globalIdx+1}" style="max-width: 100%; height: auto; max-height: ${imgMaxH}; object-fit: contain;" />
               </div>
 
               <!-- Calculation & Scratch Area -->
-              <div style="margin-top: 3px; border: 1px dashed #cbd5e1; border-radius: 4px; padding: 2px 6px; background: #fafafa; min-height: ${workMinH};">
-                <div style="font-size: 9px; color: #94a3b8; font-weight: bold;">✏️ 算式與思考空間：</div>
+              <div style="height: ${workMinH}; min-height: ${workMinH}; flex-shrink: 0; margin-top: 1.5mm; border: 1px dashed #cbd5e1; border-radius: 4px; padding: 1mm 2.5mm; background: #fafafa; display: flex; flex-direction: column; justify-content: flex-start;">
+                <div style="font-size: 8.5px; color: #94a3b8; font-weight: bold;">✏️ 算式與思考空間：</div>
               </div>
 
             </div>
@@ -1975,7 +2002,7 @@ ${unit.tip}
       // Teacher Answer Key Section (if enabled)
       if (includeTeacherKey) {
         html += `
-          <div class="print-page-wrapper" style="box-sizing: border-box; width: 100%; background: #ffffff; padding: ${isLandscape ? '14px 20px' : '16px 20px'}; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; page-break-after: auto; break-after: auto;">
+          <div class="print-page-wrapper" style="box-sizing: border-box; width: 100%; min-height: ${pageMinHeight}; background: #ffffff; padding: ${pagePadding}; margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; page-break-after: auto; break-after: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 2px solid #0f172a;">
               <div>
                 <span style="background: #e11d48; color: #fff; font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 4px;">教師專用</span>
@@ -2032,7 +2059,10 @@ ${unit.tip}
     function executePrint() {
       const content = document.getElementById('printSheetPreview').innerHTML;
       const orient = currentPrintOrientation === 'landscape' ? 'landscape' : 'portrait';
-      const pageMargin = orient === 'landscape' ? '7mm 9mm 7mm 9mm' : '9mm 12mm 9mm 12mm';
+      const pageMargin = orient === 'landscape' ? '7mm 9mm 7mm 9mm' : '8mm 10mm 8mm 10mm';
+      const pageMinHeight = orient === 'landscape' ? '194mm' : '278mm';
+
+      syncGlobalPrintOrientation(orient);
 
       let frame = document.getElementById('testSheetPrintFrame');
       if (frame) {
@@ -2042,25 +2072,40 @@ ${unit.tip}
       frame = document.createElement('iframe');
       frame.id = 'testSheetPrintFrame';
       frame.style.position = 'fixed';
-      frame.style.left = '-9999px';
-      frame.style.top = '-9999px';
-      frame.style.width = orient === 'landscape' ? '1123px' : '794px';
-      frame.style.height = orient === 'landscape' ? '794px' : '1123px';
+      frame.style.top = '0';
+      frame.style.left = '0';
+      frame.style.width = '100vw';
+      frame.style.height = '100vh';
       frame.style.border = 'none';
+      frame.style.opacity = '0';
+      frame.style.pointerEvents = 'none';
+      frame.style.zIndex = '-999';
       document.body.appendChild(frame);
 
       const frameDoc = frame.contentWindow.document;
       frameDoc.open();
       frameDoc.write(`
         <!DOCTYPE html>
-        <html>
+        <html style="width: 100%; height: 100%;">
         <head>
           <meta charset="utf-8">
           <title>臺南市國小學力檢測先備真題練習卷</title>
           <style>
             @page {
-              size: ${orient};
+              size: A4 ${orient};
               margin: ${pageMargin};
+            }
+            @media print {
+              @page {
+                size: A4 ${orient};
+                margin: ${pageMargin};
+              }
+              html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+              }
             }
             * {
               box-sizing: border-box;
@@ -2079,12 +2124,16 @@ ${unit.tip}
             .print-page-wrapper {
               box-sizing: border-box;
               width: 100% !important;
-              padding: 0 !important;
+              min-height: ${pageMinHeight} !important;
+              padding: ${pageMargin} !important;
               margin: 0 !important;
               border: none !important;
               box-shadow: none !important;
               page-break-after: always;
               break-after: page;
+              display: flex !important;
+              flex-direction: column !important;
+              justify-content: space-between !important;
             }
             .print-page-wrapper:last-child {
               page-break-after: auto;
@@ -2118,7 +2167,7 @@ ${unit.tip}
       setTimeout(() => {
         frame.contentWindow.focus();
         frame.contentWindow.print();
-      }, 350);
+      }, 400);
     }
 
     // Close modal on Escape
