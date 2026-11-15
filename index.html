@@ -327,10 +327,7 @@
 
           <!-- Official Exam Book Download Actions (直接下載官方題本與外連) -->
           <div class="flex flex-wrap items-center gap-2.5">
-            <a id="btnDownloadExamZip" href="#" target="_blank" download class="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-              <span class="text-base">📥</span>
-              <span id="txtDownloadExamZip">下載 114學年度 三年級 官方完整題本 (ZIP)</span>
-            </a>
+            
             <a href="https://saaassessment.ntcu.edu.tw/ExamReleases" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold border border-slate-300 transition-all shadow-2xs" title="前往教育部國立臺中教育大學 縣市學生學習能力檢測-試題公告 官方網站">
               <span>🏛️ 官方試題公告網</span>
               <span class="text-xs">↗</span>
@@ -2924,25 +2921,8 @@ ${qData.rem || '（無官方補救文字）'}
     }
 
     function updateExamDownloadButton() {
-      const btn = document.getElementById('btnDownloadExamZip');
-      const txt = document.getElementById('txtDownloadExamZip');
-      if (!btn || !txt || typeof OFFICIAL_EXAM_DOWNLOADS === 'undefined') return;
-
-      const y = String(currentMatrixYear);
-      const g = String(currentGrade);
-      const url = OFFICIAL_EXAM_DOWNLOADS[y] ? OFFICIAL_EXAM_DOWNLOADS[y][g] : null;
-
-      if (url) {
-        btn.href = url;
-        btn.classList.remove('opacity-40', 'pointer-events-none', 'grayscale');
-        txt.innerText = `下載 ${y}學年度 ${gradeNames[currentGrade]}年級 官方完整題本 (ZIP)`;
-        btn.title = `點擊直接下載 ${y}學年度 國小${gradeNames[currentGrade]}年級 縣市學力檢測正式施測題本壓縮檔`;
-      } else {
-        btn.href = '#';
-        btn.classList.add('opacity-40', 'pointer-events-none', 'grayscale');
-        txt.innerText = `${y}學年度 ${gradeNames[currentGrade]}年級 暫無官方題本`;
-        btn.title = '該年度暫無提供獨立題本下載';
-      }
+      // Button removed as per user request (users should download directly from official release website)
+      return;
     }
 
 </script>
