@@ -28520,7 +28520,7 @@ function loadDemoClass50A() {
       const question_rates = {};
       for (let q = 1; q <= 25; q++) {
         const total = q_stats[q].correct + q_stats[q].wrong;
-        const rate = total > 0 ? (q_stats[q].correct / total * 100) : 0;
+        const rate = total > 0 ? parseFloat((q_stats[q].correct / total * 100).toFixed(1)) : 0;
         question_rates[q] = {
           rate: rate,
           correct_count: q_stats[q].correct,
@@ -29100,9 +29100,11 @@ function loadDemoClass50A() {
 
       for (let q = 1; q <= 25; q++) {
         const qData = qRates ? qRates[String(q)] : null;
-        const passRate = qData ? qData.rate : (DEMO_SCHOOL_Q_RATES[String(q)] || 50);
-        const cityRate = cRates[String(q)] || 50;
-        const isBetter = passRate >= cityRate;
+        const rawPassRate = qData ? qData.rate : (DEMO_SCHOOL_Q_RATES[String(q)] || 50);
+        const passRate = Number(rawPassRate).toFixed(1);
+        const rawCityRate = cRates[String(q)] !== undefined ? cRates[String(q)] : 50;
+        const cityRate = Number(rawCityRate).toFixed(1);
+        const isBetter = parseFloat(passRate) >= parseFloat(cityRate);
 
         const btn = document.createElement('button');
         btn.onclick = () => showQuestionDetail(currentGrade, q, passRate, cityRate, qData ? qData.wrong_students : []);
@@ -29122,7 +29124,9 @@ function loadDemoClass50A() {
       modal.classList.remove('hidden');
 
       const qPad = String(qNum).padStart(2, '0');
-      document.getElementById('modalQuestionTitle').innerText = `${grade}年級 · 第 ${qNum} 題 試題分析 (本班通過率: ${sRate}% vs. 市平均: ${cRate}%)`;
+      const sRateFormatted = Number(sRate).toFixed(1);
+      const cRateFormatted = Number(cRate).toFixed(1);
+      document.getElementById('modalQuestionTitle').innerText = `${grade}年級 · 第 ${qNum} 題 試題分析 (本班通過率: ${sRateFormatted}% vs. 市平均: ${cRateFormatted}%)`;
       document.getElementById('modalQuestionImg').src = `question_images/g${grade}_q${qPad}.png`;
 
       const summary = (QUESTION_SUMMARY_115[grade] && QUESTION_SUMMARY_115[grade][String(qNum)]) || '該題測驗焦點';
