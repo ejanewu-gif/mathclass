@@ -475,19 +475,27 @@
           </div>
 
           <!-- 梯隊快捷分流標籤按鈕 -->
-          <div class="flex flex-wrap items-center gap-1.5 bg-black/50 p-1 rounded-lg border border-white/10">
-            <button id="filterBtn_all" onclick="setStudentTableFilter('all')" class="px-2.5 py-1 rounded text-xs font-bold transition bg-amber-400 text-slate-950 shadow">
-              全部 (<span id="countFilterAll">14</span>)
-            </button>
-            <button id="filterBtn_top" onclick="setStudentTableFilter('top')" class="px-2.5 py-1 rounded text-xs font-bold transition text-emerald-300 hover:text-white hover:bg-white/5">
-              🌟 頂標群 (<span id="countFilterTop">5</span>)
-            </button>
-            <button id="filterBtn_mid" onclick="setStudentTableFilter('mid')" class="px-2.5 py-1 rounded text-xs font-bold transition text-sky-300 hover:text-white hover:bg-white/5">
-              📘 中等/基礎 (<span id="countFilterMid">7</span>)
-            </button>
-            <button id="filterBtn_help" onclick="setStudentTableFilter('help')" class="px-2.5 py-1 rounded text-xs font-bold transition text-rose-300 hover:text-white hover:bg-white/5">
-              🌱 待扶助 (<span id="countFilterHelp">2</span>)
-            </button>
+          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+            <!-- 班級專屬分流器 (多班/全年級時自動顯示) -->
+            <div id="classFilterContainer" class="hidden flex flex-wrap items-center gap-1 bg-black/60 p-1 rounded-lg border border-sky-400/30">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- 四階常模分流標籤 -->
+            <div class="flex flex-wrap items-center gap-1.5 bg-black/50 p-1 rounded-lg border border-white/10">
+              <button id="filterBtn_all" onclick="setStudentTableFilter('all')" class="px-2.5 py-1 rounded text-xs font-bold transition bg-amber-400 text-slate-950 shadow">
+                全部 (<span id="countFilterAll">14</span>)
+              </button>
+              <button id="filterBtn_top" onclick="setStudentTableFilter('top')" class="px-2.5 py-1 rounded text-xs font-bold transition text-emerald-300 hover:text-white hover:bg-white/5">
+                🌟 頂標群 (<span id="countFilterTop">5</span>)
+              </button>
+              <button id="filterBtn_mid" onclick="setStudentTableFilter('mid')" class="px-2.5 py-1 rounded text-xs font-bold transition text-sky-300 hover:text-white hover:bg-white/5">
+                📘 中等/基礎 (<span id="countFilterMid">7</span>)
+              </button>
+              <button id="filterBtn_help" onclick="setStudentTableFilter('help')" class="px-2.5 py-1 rounded text-xs font-bold transition text-rose-300 hover:text-white hover:bg-white/5">
+                🌱 待扶助 (<span id="countFilterHelp">2</span>)
+              </button>
+            </div>
           </div>
         </div>
 
@@ -28179,13 +28187,33 @@
           const workbook = XLSX.read(data, {type: 'array'});
           const sheetNames = workbook.SheetNames;
           
-          // 判斷是否為「個人成績多分頁模式」
+          if (!sheetNames || sheetNames.length === 0) {
+            alert('檔案內無任何工作表！');
+            return;
+          }
+
+          // 判斷是否為「個人成績模式」：
+          // 1. 如果是多工作表且不全為 Worksheet
           const personalSheets = sheetNames.filter(name => name.includes('成績') || name !== 'Worksheet');
-          const isPersonalMode = personalSheets.length > 1;
+          let isPersonalMode = personalSheets.length > 1;
+
+          // 2. 如果只有 1 個工作表，檢查前 25 列中是否出現「所屬縣市」、「學校名稱」、「學生姓名」或「評量向度」
+          const firstSheet = workbook.Sheets[sheetNames[0]];
+          const firstRows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+          
+          if (!isPersonalMode && firstRows && firstRows.length > 0) {
+            for (let r = 0; r < Math.min(25, firstRows.length); r++) {
+              const rStr = JSON.stringify(firstRows[r] || '');
+              if (rStr.includes('所屬縣市') || rStr.includes('學生姓名') || rStr.includes('評量向度')) {
+                isPersonalMode = true;
+                break;
+              }
+            }
+          }
 
           if (isPersonalMode) {
-            // ================= 模式 B：個人成績深度解碼 =================
-            parsePersonalSheetsWorkbook(workbook, personalSheets);
+            // ================= 萬能個人成績深度解碼器 (支援單Sheet垂直堆疊多學生、多Sheet、跨班全年級) =================
+            parseUniversalPersonalWorkbook(workbook);
           } else {
             // ================= 模式 A：班級成績總表 =================
             parseSummarySheetWorkbook(workbook);
@@ -28199,103 +28227,227 @@
       reader.readAsArrayBuffer(file);
     }
 
-    // 解析個人成績多分頁 (模式 B)
-    function parsePersonalSheetsWorkbook(workbook, sheetNames) {
+    // 萬能個人成績解析器 (支援垂直堆疊連續學生、跨班級多工作表、全年級合併大數據)
+    function parseUniversalPersonalWorkbook(workbook) {
+      const rawStudentBlocks = [];
+
+      workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        if (!sheet) return;
+        const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
+        if (!rows || rows.length < 5) return;
+
+        // 偵測是否為單一工作表垂直堆疊多位學生
+        const splitIndices = [];
+        for (let r = 0; r < rows.length; r++) {
+          const row = rows[r];
+          if (!row) continue;
+          const r0 = String(row[0] || '').trim();
+          const r1 = String(row[1] || '').trim();
+          if (r0 === '所屬縣市' || r0 === '學校名稱' || r1 === '所屬縣市' || r1 === '學校名稱') {
+            if (splitIndices.length === 0 || (r - splitIndices[splitIndices.length - 1] > 10)) {
+              splitIndices.push(r);
+            }
+          }
+        }
+
+        if (splitIndices.length > 1) {
+          // 垂直堆疊切分
+          for (let i = 0; i < splitIndices.length; i++) {
+            const start = splitIndices[i];
+            const end = (i + 1 < splitIndices.length) ? splitIndices[i + 1] : rows.length;
+            const block = rows.slice(start, end);
+            if (block.length >= 5) rawStudentBlocks.push(block);
+          }
+        } else {
+          // 單一工作表即為一位學生
+          rawStudentBlocks.push(rows);
+        }
+      });
+
+      if (rawStudentBlocks.length === 0) {
+        alert('未能從檔案中辨識出個人成績資料，請確認檔案格式！');
+        return;
+      }
+
       const students = [];
       const q_stats = {};
       for (let q = 1; q <= 25; q++) {
         q_stats[q] = { correct: 0, wrong: 0, wrong_students: [], correct_students: [] };
       }
 
-      let schoolName = '受測國小';
-      let grade = '5';
-      let className = '班級';
+      let schoolName = '';
+      let grade = '3';
       let year = '115';
+      const classNamesSet = new Set();
 
-      sheetNames.forEach(sheetName => {
-        if (sheetName === 'Worksheet') return;
-        const sheet = workbook.Sheets[sheetName];
-        if (!sheet) return;
-        const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
-        if (rows.length < 5) return;
+      rawStudentBlocks.forEach((rows, bIdx) => {
+        let r_school = null;
+        let r_student = null;
+        let r_score = null;
+        let r_comp = null;
+        let r_dims_start = -1;
 
-        // Header info from R2, R3, R4
-        const r2 = rows[1] || [];
-        const r3 = rows[2] || [];
-        const r4 = rows[3] || [];
-        const r7 = rows[6] || [];
+        for (let r = 0; r < rows.length; r++) {
+          const row = rows[r];
+          if (!row) continue;
+          const rStr = row.map(c => String(c || '')).join(',');
+          if (rStr.includes('學校名稱') && !r_school) r_school = row;
+          if (rStr.includes('學生姓名') && !r_student) r_student = row;
+          if (rStr.includes('科目代碼') && !r_score) r_score = row;
+          if (rStr.includes('平均答對率') && !r_comp && r + 1 < rows.length) r_comp = rows[r + 1];
+          if (rStr.includes('評量向度') && r_dims_start === -1) r_dims_start = r + 1;
+        }
 
-        schoolName = String(r2[1] || schoolName).trim();
-        grade = String(r2[3] || grade).trim();
-        className = String(r2[5] || className).trim();
+        // 提取學校名稱、年級與班級
+        let curSchool = schoolName;
+        let curGrade = grade;
+        let curClass = '301';
 
-        const name = String(r3[1] || sheetName.replace('成績', '')).trim();
-        const seat = String(r3[3] || '').padStart(2, '0');
-        const level = String(r3[5] || '基礎').trim();
+        if (r_school) {
+          for (let c = 0; c < r_school.length; c++) {
+            const val = String(r_school[c] || '').trim();
+            if (val === '學校名稱' && c + 1 < r_school.length) {
+              const scVal = String(r_school[c + 1] || '').trim();
+              if (scVal) curSchool = scVal;
+            }
+            if (val === '年級' && c + 1 < r_school.length) {
+              const grVal = String(r_school[c + 1] || '').trim();
+              if (grVal) curGrade = grVal;
+            }
+            if (val === '班級名稱') {
+              let clVal = String(r_school[c + 1] || '').trim();
+              if (!clVal && c + 2 < r_school.length) clVal = String(r_school[c + 2] || '').trim();
+              if (clVal) curClass = clVal;
+            }
+          }
+        }
 
-        const rateStr = String(r4[3] || '0%').replace('%', '').trim();
-        const score = parseFloat(rateStr) / 100.0;
-        const pr_city = (r4[5] !== '' && r4[5] !== undefined) ? parseInt(r4[5]) : null;
+        let name = `學生${bIdx + 1}`;
+        let seat = String(bIdx + 1).padStart(2, '0');
+        let level = '基礎';
 
-        const comp_city = parseFloat(r7[2] || 54);
-        const comp_school = parseFloat(r7[3] || 57);
-        const comp_class = parseFloat(r7[4] || 57);
+        if (r_student) {
+          for (let c = 0; c < r_student.length; c++) {
+            const val = String(r_student[c] || '').trim();
+            if (val === '學生姓名' && c + 1 < r_student.length) {
+              const nVal = String(r_student[c + 1] || '').trim();
+              if (nVal) name = nVal;
+            }
+            if (val === '年級' && c + 1 < r_student.length) {
+              const gVal = String(r_student[c + 1] || '').trim();
+              if (gVal) curGrade = gVal;
+            }
+            if (val === '座號' && c + 1 < r_student.length) {
+              const stVal = String(r_student[c + 1] || '').trim();
+              if (stVal) seat = stVal.padStart(2, '0');
+            }
+            if (val === '等級' && c + 1 < r_student.length) {
+              const lvVal = String(r_student[c + 1] || '').trim();
+              if (lvVal) level = lvVal;
+            }
+          }
+        }
 
-        // Dimensions (Rows 22 to 30, index 22 to 29 in 0-indexed)
+        if (!schoolName && curSchool) schoolName = curSchool;
+        if (curGrade) grade = curGrade;
+        if (curClass) classNamesSet.add(curClass);
+
+        let score = 0.5;
+        let pr_city = null;
+        let pr_all = null;
+
+        if (r_score) {
+          for (let c = 0; c < r_score.length; c++) {
+            const val = String(r_score[c] || '').trim();
+            if (val === '答對率' && c + 1 < r_score.length) {
+              const rateVal = String(r_score[c + 1] || '0%').replace('%', '').trim();
+              score = parseFloat(rateVal) / 100.0;
+            }
+            if (val.includes('PR值(所屬縣市)') && c + 1 < r_score.length) {
+              pr_city = parseInt(r_score[c + 1]) || null;
+            }
+            if (val.includes('PR值(全部') && c + 1 < r_score.length) {
+              pr_all = parseInt(r_score[c + 1]) || null;
+            }
+          }
+        }
+
+        let comp_city = 61;
+        let comp_school = 64;
+        let comp_class = 67;
+        if (r_comp) {
+          const nums = r_comp.map(v => parseFloat(v)).filter(v => !isNaN(v));
+          if (nums.length >= 4) {
+            comp_city = nums[1] || comp_city;
+            comp_school = nums[2] || comp_school;
+            comp_class = nums[3] || comp_class;
+          }
+        }
+
         const dims = {};
         const wrong_qs = new Set();
         const correct_qs = new Set();
 
-        for (let r = 22; r < Math.min(30, rows.length); r++) {
-          const row = rows[r];
-          if (!row || !row[0]) continue;
-          const dimName = String(row[0]).trim();
-          const qCount = parseInt(row[1] || 0);
-          const dRateStr = String(row[2] || '0%').replace('%', '').trim();
-          const dRate = parseFloat(dRateStr) / 100.0;
+        if (r_dims_start !== -1) {
+          for (let r = r_dims_start; r < rows.length; r++) {
+            const row = rows[r];
+            if (!row || !row[0]) continue;
+            const dimName = String(row[0]).trim();
+            if (dimName === '所屬縣市' || dimName === '學校名稱') break;
 
-          const corrVal = row[3];
-          const wrongVal = row[4];
+            const qCount = parseInt(row[1] || 0);
+            const dRateStr = String(row[2] || '0%').replace('%', '').trim();
+            const dRate = parseFloat(dRateStr) / 100.0;
 
-          const corrList = [];
-          if (corrVal !== undefined && corrVal !== null) {
-            String(corrVal).split(',').forEach(s => {
-              const qNum = parseInt(s.trim());
-              if (!isNaN(qNum)) {
-                corrList.push(qNum);
-                correct_qs.add(qNum);
-              }
-            });
+            const corrVal = row[3];
+            const wrongVal = row[4];
+
+            const corrList = [];
+            if (corrVal !== undefined && corrVal !== null) {
+              String(corrVal).split(',').forEach(s => {
+                const qNum = parseInt(s.trim());
+                if (!isNaN(qNum)) {
+                  corrList.push(qNum);
+                  correct_qs.add(qNum);
+                }
+              });
+            }
+
+            const wrongList = [];
+            if (wrongVal !== undefined && wrongVal !== null) {
+              String(wrongVal).split(',').forEach(s => {
+                const qNum = parseInt(s.trim());
+                if (!isNaN(qNum)) {
+                  wrongList.push(qNum);
+                  wrong_qs.add(qNum);
+                }
+              });
+            }
+
+            dims[dimName] = {
+              count: qCount,
+              rate: dRate,
+              correct_qs: corrList,
+              wrong_qs: wrongList
+            };
           }
-
-          const wrongList = [];
-          if (wrongVal !== undefined && wrongVal !== null) {
-            String(wrongVal).split(',').forEach(s => {
-              const qNum = parseInt(s.trim());
-              if (!isNaN(qNum)) {
-                wrongList.push(qNum);
-                wrong_qs.add(qNum);
-              }
-            });
-          }
-
-          dims[dimName] = {
-            count: qCount,
-            rate: dRate,
-            correct_qs: corrList,
-            wrong_qs: wrongList
-          };
         }
 
+        // 唯一 UID = 班級_座號
+        const uid = `${curClass}_${seat}`;
+
         const sObj = {
+          uid: uid,
+          className: curClass,
           seat: seat,
           name: name,
-          gender: ['01','03','04','05','07','09','10'].includes(seat) ? '男' : '女',
+          gender: '其他',
           special: '否',
           level: level,
           score: score,
           pr_city: pr_city,
-          pr_all: null,
+          pr_all: pr_all,
           comp: {
             city: comp_city,
             school: comp_school,
@@ -28306,58 +28458,65 @@
           wrong_qs: Array.from(wrong_qs).sort((a,b)=>a-b),
           correct_qs: Array.from(correct_qs).sort((a,b)=>a-b)
         };
-        students.append ? students.push(sObj) : students.push(sObj);
 
         sObj.correct_qs.forEach(q => {
           if (q_stats[q]) {
             q_stats[q].correct++;
-            q_stats[q].correct_students.push(name);
+            q_stats[q].correct_students.push(sObj.name);
           }
         });
         sObj.wrong_qs.forEach(q => {
           if (q_stats[q]) {
             q_stats[q].wrong++;
-            q_stats[q].wrong_students.push(name);
+            q_stats[q].wrong_students.push(sObj.name);
           }
         });
+
+        students.push(sObj);
       });
 
-      students.sort((a,b) => parseInt(a.seat || 99) - parseInt(b.seat || 99));
-
-      // 25 題通過率
       const question_rates = {};
       for (let q = 1; q <= 25; q++) {
         const total = q_stats[q].correct + q_stats[q].wrong;
-        const pct = total > 0 ? parseFloat((q_stats[q].correct / total * 100).toFixed(1)) : 0;
-        question_rates[String(q)] = {
-          rate: pct,
+        const rate = total > 0 ? (q_stats[q].correct / total * 100) : 0;
+        question_rates[q] = {
+          rate: rate,
           correct_count: q_stats[q].correct,
           wrong_count: q_stats[q].wrong,
           wrong_students: q_stats[q].wrong_students
         };
       }
 
+      const classList = Array.from(classNamesSet).sort();
+      const isMultiClass = classList.length > 1;
+      const displayClassName = isMultiClass 
+        ? `${grade}年級全年級 (共${classList.length}班 · ${students.length}人)`
+        : (classList[0] || '301') + '班';
+
       currentClassData = {
         mode: 'personal_sheets',
+        isMultiClass: isMultiClass,
+        classList: classList,
         year: year,
-        schoolName: schoolName,
+        schoolName: schoolName || '受測國小',
         grade: grade,
-        className: className,
-        teacher: '導師',
+        className: displayClassName,
+        teacher: isMultiClass ? '學年全體導師' : '導師',
         subject: '數學',
         students: students,
         question_rates: question_rates
       };
 
-      currentGrade = currentClassData.grade || '5';
-      currentSchool = currentClassData.schoolName || '南興國小';
+      currentGrade = grade;
+      currentSchool = currentClassData.schoolName;
 
       renderFullClassDashboard();
       initStep3Units();
-      alert(`🎉 成功解析個人成績檔案！\n\n已成功匯入【${schoolName} ${grade}年級 ${className}班】共 ${students.length} 位學生數據，已自動解鎖全班 25 題真跡通過率與個人錯題處方箋！`);
+
+      alert(`🎉 成功匯入【${currentClassData.schoolName} · ${currentClassData.className}】！\n\n已成功解析 ${students.length} 位學生數據！\n${isMultiClass ? `🌟 系統已自動啟動「全年級跨班診斷模式」：\n1. 各班座號已依班級自動隔離，處方箋與錯題卷完全獨立，絕不衝突！\n2. 學生名冊頂部已自動生成「班級分流標籤」，可隨時切換單班或全年級查看！` : ''}`);
     }
 
-    // 解析班級成績總表 (模式 A)
+        // 解析班級成績總表 (模式 A)
     function parseSummarySheetWorkbook(workbook) {
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonRows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
@@ -28944,11 +29103,58 @@
     }
 
     // 渲染學生個別化清單 (增加個人處方箋與列印按鈕)
+    let currentSelectedClassFilter = 'all';
+
+    function setClassFilter(cName) {
+      currentSelectedClassFilter = cName;
+      renderClassFilterButtons();
+      renderStudentTable();
+    }
+
+    function renderClassFilterButtons() {
+      const container = document.getElementById('classFilterContainer');
+      if (!container) return;
+
+      if (!currentClassData.isMultiClass || !currentClassData.classList || currentClassData.classList.length <= 1) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      container.classList.remove('hidden');
+      container.innerHTML = '';
+
+      // 全部班級
+      const allBtn = document.createElement('button');
+      const isAll = (currentSelectedClassFilter === 'all');
+      allBtn.className = `px-2.5 py-0.5 rounded text-xs font-bold transition ${isAll ? 'bg-sky-500 text-slate-950 shadow' : 'text-sky-300 hover:text-white hover:bg-white/5'}`;
+      allBtn.innerText = `全年級 (${currentClassData.students.length})`;
+      allBtn.onclick = () => setClassFilter('all');
+      container.appendChild(allBtn);
+
+      currentClassData.classList.forEach(cName => {
+        const count = currentClassData.students.filter(s => s.className === cName).length;
+        const btn = document.createElement('button');
+        const isActive = (currentSelectedClassFilter === cName);
+        btn.className = `px-2.5 py-0.5 rounded text-xs font-bold transition ${isActive ? 'bg-sky-500 text-slate-950 shadow' : 'text-slate-300 hover:text-white hover:bg-white/5'}`;
+        btn.innerText = `${cName}班 (${count})`;
+        btn.onclick = () => setClassFilter(cName);
+        container.appendChild(btn);
+      });
+    }
+
     function renderStudentTable() {
       const tbody = document.getElementById('studentTableBody');
       tbody.innerHTML = '';
 
-      const validStudents = currentClassData.students.filter(s => s.special === '否' && s.score !== null);
+      renderClassFilterButtons();
+
+      // 先依班級篩選
+      let pool = currentClassData.students;
+      if (currentClassData.isMultiClass && currentSelectedClassFilter !== 'all') {
+        pool = pool.filter(s => s.className === currentSelectedClassFilter);
+      }
+
+      const validStudents = pool.filter(s => s.special === '否' && s.score !== null);
       const topCount = validStudents.filter(s => s.level === '精熟' || (s.pr_city !== null && s.pr_city >= 75)).length;
       const helpCount = validStudents.filter(s => s.level === '待加強' || (s.pr_city !== null && s.pr_city < 25)).length;
       const midCount = validStudents.length - topCount - helpCount;
@@ -28957,12 +29163,12 @@
       const cTop = document.getElementById('countFilterTop');
       const cMid = document.getElementById('countFilterMid');
       const cHelp = document.getElementById('countFilterHelp');
-      if (cAll) cAll.innerText = currentClassData.students.length;
+      if (cAll) cAll.innerText = pool.length;
       if (cTop) cTop.innerText = topCount;
       if (cMid) cMid.innerText = midCount;
       if (cHelp) cHelp.innerText = helpCount;
 
-      let displayStudents = currentClassData.students;
+      let displayStudents = pool;
       if (currentTableFilter === 'top') {
         displayStudents = displayStudents.filter(s => s.level === '精熟' || (s.pr_city !== null && s.pr_city >= 75));
       } else if (currentTableFilter === 'help') {
@@ -28995,10 +29201,13 @@
         const pk = s.dims['程序執行']?.rate !== null && s.dims['程序執行']?.rate !== undefined ? (s.dims['程序執行'].rate * 100).toFixed(0) + '%' : '-';
         const ps = s.dims['解題思考']?.rate !== null && s.dims['解題思考']?.rate !== undefined ? (s.dims['解題思考'].rate * 100).toFixed(0) + '%' : '-';
 
-        const hasPersonalData = (s.wrong_qs && s.wrong_qs.length > 0);
+        const sId = s.uid || s.seat;
+        const seatBadge = (currentClassData.isMultiClass && s.className)
+          ? `<span class="px-1.5 py-0.5 rounded bg-sky-950 text-sky-300 font-mono text-[10px] mr-1 border border-sky-500/40 font-bold">${s.className}</span><span class="font-mono text-slate-200">${s.seat}</span>`
+          : `<span class="font-mono text-slate-300">${s.seat}</span>`;
 
         tr.innerHTML = `
-          <td class="p-2.5 font-mono text-slate-300">${s.seat}</td>
+          <td class="p-2.5">${seatBadge}</td>
           <td class="p-2.5 font-bold text-slate-200">
             ${displayName} ${isSpecial ? '<span class="text-[10px] px-1 rounded bg-amber-900 text-amber-300">特殊</span>' : ''}
           </td>
@@ -29014,10 +29223,10 @@
             ${minDimName !== '-' ? minDimName + ` (${(minDimRate*100).toFixed(0)}%)` : '-'}
           </td>
           <td class="p-2.5 text-right space-x-1.5">
-            <button onclick="openPersonalPrescriptionModal('${s.seat}')" class="px-2.5 py-1 rounded bg-sky-950 hover:bg-sky-900 border border-sky-400/30 text-sky-300 text-[11px] font-bold transition">
+            <button onclick="openPersonalPrescriptionModal('${sId}')" class="px-2.5 py-1 rounded bg-sky-950 hover:bg-sky-900 border border-sky-400/30 text-sky-300 text-[11px] font-bold transition">
               🔍 個人處方
             </button>
-            <button onclick="printPersonalWrongPaper('${s.seat}')" class="px-2.5 py-1 rounded bg-emerald-950 hover:bg-emerald-900 border border-emerald-400/30 text-emerald-300 text-[11px] font-bold transition">
+            <button onclick="printPersonalWrongPaper('${sId}')" class="px-2.5 py-1 rounded bg-emerald-950 hover:bg-emerald-900 border border-emerald-400/30 text-emerald-300 text-[11px] font-bold transition">
               🖨️ 錯題卷
             </button>
           </td>
@@ -29029,8 +29238,8 @@
     // ================= 個人學力處方箋對話盒 (MODAL) =================
     let currentSelectedStudentForPrint = null;
 
-    function openPersonalPrescriptionModal(seat) {
-      const student = currentClassData.students.find(s => String(s.seat) === String(seat));
+    function openPersonalPrescriptionModal(targetId) {
+      const student = currentClassData.students.find(s => (s.uid && s.uid === String(targetId)) || String(s.seat) === String(targetId));
       if (!student) return;
 
       currentSelectedStudentForPrint = student;
@@ -29044,7 +29253,8 @@
         : student.name;
 
       document.getElementById('prescriptionStudentTitle').innerText = `${displayName} 同學 · 個人數學學力診斷處方箋`;
-      document.getElementById('prescriptionStudentMeta').innerText = `座號：${student.seat} ｜ 等級：${student.level || '基礎'} ｜ 答對率：${(student.score*100).toFixed(0)}% ｜ 全市 PR：${student.pr_city || '-'}`;
+      const classLabel = (student.className && currentClassData.isMultiClass) ? (student.className + '班 ') : '';
+      document.getElementById('prescriptionStudentMeta').innerText = `班級：${classLabel || (currentClassData.className + ' ')}｜ 座號：${student.seat} ｜ 等級：${student.level || '基礎'} ｜ 答對率：${(student.score*100).toFixed(0)}% ｜ 全市 PR：${student.pr_city || '-'}`;
 
       // 4大對比卡
       document.getElementById('persStatPersonal').innerText = `${(student.score*100).toFixed(0)}%`;
@@ -29172,8 +29382,8 @@
     }
 
     // ================= 殺手級列印：產生該生專屬 A4 錯題補救練習卷 =================
-    function printPersonalWrongPaper(seat) {
-      const student = currentClassData.students.find(s => String(s.seat) === String(seat));
+    function printPersonalWrongPaper(targetId) {
+      const student = currentClassData.students.find(s => (s.uid && s.uid === String(targetId)) || String(s.seat) === String(targetId));
       if (!student) {
         alert('找不到該學生資料！');
         return;
@@ -29927,8 +30137,8 @@
 
         div.innerHTML = `
           <div class="flex items-center gap-3">
-            <span class="w-7 h-7 rounded-full bg-black/60 flex items-center justify-center font-mono font-bold text-xs text-slate-300">
-              ${s.seat}
+            <span class="px-2 h-7 rounded-lg bg-black/60 flex items-center justify-center font-mono font-bold text-xs text-slate-300 border border-white/10 shrink-0">
+              ${(currentClassData.isMultiClass && s.className) ? (s.className + '-') : ''}${s.seat}
             </span>
             <div>
               <div class="font-bold text-slate-100 flex items-center gap-2 text-sm">
@@ -29946,10 +30156,10 @@
           </div>
 
           <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
-            <button onclick="closeTierRosterModal(); openPersonalPrescriptionModal('${s.seat}')" class="px-2.5 py-1 rounded bg-sky-950 hover:bg-sky-900 border border-sky-400/30 text-sky-300 text-xs font-bold transition">
+            <button onclick="closeTierRosterModal(); openPersonalPrescriptionModal('${s.uid || s.seat}')" class="px-2.5 py-1 rounded bg-sky-950 hover:bg-sky-900 border border-sky-400/30 text-sky-300 text-xs font-bold transition">
               🔍 個人處方
             </button>
-            <button onclick="closeTierRosterModal(); printPersonalWrongPaper('${s.seat}')" class="px-2.5 py-1 rounded bg-emerald-950 hover:bg-emerald-900 border border-emerald-400/30 text-emerald-300 text-xs font-bold transition">
+            <button onclick="closeTierRosterModal(); printPersonalWrongPaper('${s.uid || s.seat}')" class="px-2.5 py-1 rounded bg-emerald-950 hover:bg-emerald-900 border border-emerald-400/30 text-emerald-300 text-xs font-bold transition">
               🖨️ 錯題卷
             </button>
           </div>
