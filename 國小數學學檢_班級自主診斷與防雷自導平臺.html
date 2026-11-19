@@ -171,7 +171,7 @@
         <!-- 卡片 1: 班級總平均 (含全校、全市雙重對比) -->
         <div class="chalk-card p-3.5 border-l-4 border-amber-400">
           <div class="text-xs text-slate-400 font-bold flex items-center justify-between">
-            <span>班級總平均</span>
+            <span id="lblClassAvgTitle">班級總平均</span>
             <span>📊</span>
           </div>
           <div id="statClassAvg" class="text-2xl sm:text-3xl font-black text-amber-300 font-mono mt-1">
@@ -255,7 +255,7 @@
             <span>🧭</span> 內容向度答對率優劣排行榜
           </h3>
           <p class="text-xs text-slate-400 mt-1">
-            一目了然看懂全班最強向度與最脆弱向度：
+            <span id="lblDimRankDesc">一目了然看懂全班最強向度與最脆弱向度：</span>
           </p>
 
           <div id="dimRankBars" class="space-y-2.5 mt-4">
@@ -278,7 +278,7 @@
               <span>🎯 評量認知三層次解碼</span>
             </div>
             <h2 class="text-xl sm:text-2xl font-black text-amber-200 chalk-title">
-              概念理解 · 程序執行 · 解題思考 班級體質診斷
+              概念理解 · 程序執行 · 解題思考 <span id="lblCogDiagnosisTitle">班級體質診斷</span>
             </h2>
           </div>
         </div>
@@ -384,7 +384,7 @@
         <div class="wood-board p-5 chalk-dashed">
           <div class="flex items-center justify-between pb-2 border-b border-white/10">
             <h3 class="text-base font-black text-emerald-300 chalk-title flex items-center gap-1.5">
-              <span>🌟</span> 全班三大優勢題型 (領先市平均)
+              <span>🌟</span> <span id="lblTopAdvTitle">全班三大優勢題型 (領先市平均)</span>
             </h3>
             <span class="text-xs text-emerald-400 font-bold">鞏固信心</span>
           </div>
@@ -397,7 +397,7 @@
         <div class="wood-board p-5 chalk-dashed">
           <div class="flex items-center justify-between pb-2 border-b border-white/10">
             <h3 class="text-base font-black text-rose-300 chalk-title flex items-center gap-1.5">
-              <span>⚠️</span> 全班三大重挫題型 (致命防雷對象)
+              <span>⚠️</span> <span id="lblTopWeakTitle">全班三大重挫題型 (致命防雷對象)</span>
             </h3>
             <span class="text-xs text-rose-400 font-bold">課堂防雷</span>
           </div>
@@ -442,13 +442,13 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-2 border-b border-white/10">
           <div>
             <h3 class="text-base font-black text-amber-200 chalk-title flex items-center gap-2">
-              <span>📋</span> 全班 25 題真跡通過率矩陣
+              <span>📋</span> <span id="lblMatrixTitle">全班 25 題真跡通過率矩陣</span>
               <span id="matrixModeBadge" class="text-[10px] px-2 py-0.5 rounded font-mono bg-emerald-950 text-emerald-300 border border-emerald-400/30">
                 100% 個人成績真實解碼
               </span>
             </h3>
             <p class="text-xs text-slate-400 mt-0.5">
-              綠色：高於市平均 | 紅色：低於市平均 | <strong>點擊任一題目方塊，立即展開試題原卷、迷思解析與【本班答錯學生名單】</strong>
+              綠色：高於市平均 | 紅色：低於市平均 | <strong>點擊任一題目方塊，立即展開試題原卷、迷思解析與【<span id="lblMatrixSubDesc">本班</span>答錯學生名單】</strong>
             </p>
           </div>
           <div class="text-xs text-slate-400 font-mono">
@@ -28634,7 +28634,50 @@ function loadDemoClass50A() {
     }
 
     // 核心渲染總入口
+    
+    // 動態語義切換：自動根據「單班」或「多班(全年級)」切換介面文字 (本班/全班 vs 全年級/學年)
+    function updateScopeTerminology() {
+      const isMulti = !!(currentClassData && currentClassData.isMultiClass);
+      const scopeThis = isMulti ? '全年級' : '本班';
+      const scopeAll = isMulti ? '全年級' : '全班';
+      const scopeAvg = isMulti ? '學年總平均' : '班級總平均';
+
+      // 1. 首頁第一張大卡片
+      const elAvg = document.getElementById('lblClassAvgTitle');
+      if (elAvg) elAvg.innerText = scopeAvg;
+
+      // 2. 內容向度排行說明
+      const elDimDesc = document.getElementById('lblDimRankDesc');
+      if (elDimDesc) elDimDesc.innerText = `一目了然看懂${scopeAll}最強向度與最脆弱向度：`;
+
+      // 3. 認知診斷區塊標題
+      const elCogTitle = document.getElementById('lblCogDiagnosisTitle');
+      if (elCogTitle) elCogTitle.innerText = `${scopeThis}體質診斷`;
+
+      // 4. 三層次字卡上的標籤
+      document.querySelectorAll('.lblScopeThis').forEach(el => {
+        el.innerText = scopeThis;
+      });
+
+      // 5. 三大優勢題與三大重挫題標題
+      const elTopAdv = document.getElementById('lblTopAdvTitle');
+      if (elTopAdv) elTopAdv.innerText = `${scopeAll}三大優勢題型 (領先市平均)`;
+      const elTopWeak = document.getElementById('lblTopWeakTitle');
+      if (elTopWeak) elTopWeak.innerText = `${scopeAll}三大重挫題型 (致命防雷對象)`;
+
+      // 6. 矩陣標題與副標
+      const elMatrixTitle = document.getElementById('lblMatrixTitle');
+      if (elMatrixTitle) elMatrixTitle.innerText = `${scopeAll} 25 題真跡通過率矩陣`;
+      const elMatrixSub = document.getElementById('lblMatrixSubDesc');
+      if (elMatrixSub) elMatrixSub.innerText = scopeThis;
+
+      // 7. 學生清單標題
+      const elTblTitle = document.getElementById('lblStudentTableTitle');
+      if (elTblTitle) elTblTitle.innerText = `${scopeAll}學生個別化落點與關懷清單`;
+    }
+
     function renderFullClassDashboard() {
+      updateScopeTerminology();
       const d = currentClassData;
       const isCustom = (d.schoolName !== '台南國小' || d.className !== '50A');
       const dlBtn = document.getElementById('btnDownloadPlatform');
@@ -28656,7 +28699,8 @@ function loadDemoClass50A() {
 
       // 標題更新
       const modeText = d.mode === 'personal_sheets' ? '（個人成績真跡解碼版）' : '（成績總表版）';
-      document.getElementById('currentClassTitle').innerText = `${d.schoolName} · ${d.year}年度 ${d.className}班 (導師:${d.teacher})`;
+      const classSuffix = d.isMultiClass ? '' : '班';
+      document.getElementById('currentClassTitle').innerText = `${d.schoolName} · ${d.year}年度 ${d.className}${classSuffix} (導師:${d.teacher})`;
       document.getElementById('currentStatusBadge').innerText = `${validStudents.length}人 (應試)`;
       document.getElementById('selectedGradeLabel').innerText = `${d.grade} 年級 (上學期)`;
 
@@ -28889,7 +28933,7 @@ function loadDemoClass50A() {
             </span>
             <div class="text-right shrink-0">
               <div class="font-mono text-xs font-bold text-slate-100 flex items-center justify-end gap-1.5">
-                <span>本班 <strong class="text-amber-300">${item.avg.toFixed(1)}%</strong></span>
+                <span>${currentClassData.isMultiClass ? '全年級' : '本班'} <strong class="text-amber-300">${item.avg.toFixed(1)}%</strong></span>
                 <span class="text-slate-500">|</span>
                 <span>全市 <strong class="text-slate-300">${item.cityAvg !== null ? item.cityAvg.toFixed(1) + '%' : '-'}</strong></span>
               </div>
@@ -28984,7 +29028,7 @@ function loadDemoClass50A() {
 
       let narrative = '';
       if (pk < cu && pk < ps) {
-        narrative = `本班最為關鍵的盲點在於<strong>「程序執行 (PK ${pk.toFixed(1)}%)」顯著落後於「概念理解 (${cu.toFixed(1)}%)」與「解題思考 (${ps.toFixed(1)}%)」</strong>！這代表孩子們讀得懂題目、也能理解核心概念，但在分數運算、通分約分或多步驟計算時，容易發生疏漏或計算卡關。建議課堂上加強<strong>步驟自我檢核口訣與同儕互相驗算機制</strong>。`;
+        narrative = `${currentClassData.isMultiClass ? '全年級' : '本班'}最為關鍵的盲點在於<strong>「程序執行 (PK ${pk.toFixed(1)}%)」顯著落後於「概念理解 (${cu.toFixed(1)}%)」與「解題思考 (${ps.toFixed(1)}%)」</strong>！這代表孩子們讀得懂題目、也能理解核心概念，但在分數運算、通分約分或多步驟計算時，容易發生疏漏或計算卡關。建議課堂上加強<strong>步驟自我檢核口訣與同儕互相驗算機制</strong>。`;
       } else if (ps < cu && ps < pk) {
         narrative = `本班<strong>「解題思考 (PS ${ps.toFixed(1)}%)」</strong>為主要受挫層次。學生基礎概念與基本計算無虞，但一旦遭遇長題幹、多條件交織或圖表轉譯題型容易放棄。建議教學時增加<strong>「用自己的話重述題意」與「圈出關鍵限制條件」的引導對話</strong>。`;
       } else {
@@ -29046,7 +29090,7 @@ function loadDemoClass50A() {
             </div>
             <div class="text-right shrink-0">
               <div class="text-xs font-mono font-bold text-slate-100">
-                本班 <span class="text-emerald-300">${item.sRate.toFixed(1)}%</span>
+                ${currentClassData.isMultiClass ? '全年級' : '本班'} <span class="text-emerald-300">${item.sRate.toFixed(1)}%</span>
               </div>
               <div class="text-[11px] font-mono text-slate-400 mt-0.5">
                 全市 <span class="text-slate-200 font-bold">${item.cRate.toFixed(1)}%</span>
@@ -29076,7 +29120,7 @@ function loadDemoClass50A() {
             </div>
             <div class="text-right shrink-0">
               <div class="text-xs font-mono font-bold text-slate-100">
-                本班 <span class="text-rose-300">${item.sRate.toFixed(1)}%</span>
+                ${currentClassData.isMultiClass ? '全年級' : '本班'} <span class="text-rose-300">${item.sRate.toFixed(1)}%</span>
               </div>
               <div class="text-[11px] font-mono text-slate-400 mt-0.5">
                 全市 <span class="text-slate-200 font-bold">${item.cRate.toFixed(1)}%</span>
@@ -29126,7 +29170,7 @@ function loadDemoClass50A() {
       const qPad = String(qNum).padStart(2, '0');
       const sRateFormatted = Number(sRate).toFixed(1);
       const cRateFormatted = Number(cRate).toFixed(1);
-      document.getElementById('modalQuestionTitle').innerText = `${grade}年級 · 第 ${qNum} 題 試題分析 (本班通過率: ${sRateFormatted}% vs. 市平均: ${cRateFormatted}%)`;
+      document.getElementById('modalQuestionTitle').innerText = `${grade}年級 · 第 ${qNum} 題 試題分析 (${currentClassData.isMultiClass ? '全年級' : '本班'}通過率: ${sRateFormatted}% vs. 市平均: ${cRateFormatted}%)`;
       document.getElementById('modalQuestionImg').src = `question_images/g${grade}_q${qPad}.png`;
 
       const summary = (QUESTION_SUMMARY_115[grade] && QUESTION_SUMMARY_115[grade][String(qNum)]) || '該題測驗焦點';
@@ -29138,7 +29182,7 @@ function loadDemoClass50A() {
       if (wrongStudents && wrongStudents.length > 0) {
         const masked = wrongStudents.map(n => maskStudentNames ? (n.length > 2 ? n[0] + '○' + n.slice(2) : n[0] + '○') : n);
         wrongHtml = `<div class="mt-2 pt-2 border-t border-rose-500/20 text-rose-300 font-bold">
-          👥 本班答錯學生 (${wrongStudents.length}人)：<span class="font-normal text-rose-200">${masked.join('、')}</span>
+          👥 ${currentClassData.isMultiClass ? '全年級' : '本班'}答錯學生 (${wrongStudents.length}人)：<span class="font-normal text-rose-200">${masked.join('、')}</span>
         </div>`;
       }
 
