@@ -124,8 +124,8 @@
         </button>
 
         <label title="匯入臺南市學檢系統下載之班級 Excel 檔案" class="px-2.5 py-1.5 rounded-lg bg-sky-900/80 hover:bg-sky-800 border border-sky-400/50 text-sky-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow shrink-0">
-          <span>📂 匯入班級 Excel</span>
-          <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
+          <span>📂 匯入班級 Excel (可多選)</span>
+          <input type="file" id="fileInput" accept=".xlsx, .xls" multiple class="hidden" onchange="handleFileSelect(event)">
         </label>
 
         <button onclick="downloadPlatformHtml()" id="btnDownloadPlatform" title="下載此平臺檔案到您的電腦，完全離線使用、資料永不出本機！" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black transition flex items-center gap-1 shadow-lg border border-amber-300 shrink-0">
@@ -28161,15 +28161,21 @@
       alert('已成功載入「南興國小 115 年度 601 班」示範資料！');
     }
 
-    function handleFileSelect(e) {
+    
+    // 智慧檔案選取處理 (支援單檔 或 一鍵多選多個班級 Excel)
+    async function handleFileSelect(e) {
       const files = e.target.files;
-      if (files && files.length > 0) {
+      if (!files || files.length === 0) return;
+
+      if (files.length === 1) {
         processExcelFile(files[0]);
+      } else {
+        await processMultipleExcelFiles(Array.from(files));
       }
+      e.target.value = ''; // 重設以允許重複選取相同檔案
     }
 
-    // 載入示範班級 501 班 (個人成績真跡全數據模式)
-    function loadDemoClass50A() {
+function loadDemoClass50A() {
       currentClassData = JSON.parse(JSON.stringify(DEFAULT_PERSONAL_CLASS_DATA));
       currentGrade = currentClassData.grade || '5';
       currentSchool = currentClassData.schoolName || '南興國小';
@@ -28179,57 +28185,41 @@
     }
 
     // 智慧雙模 Excel 解析器 (自動判斷是「個人成績多分頁」還是「班級成績總表」)
-    function processExcelFile(file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, {type: 'array'});
-          const sheetNames = workbook.SheetNames;
-          
-          if (!sheetNames || sheetNames.length === 0) {
-            alert('檔案內無任何工作表！');
-            return;
+    
+    // 多檔案並行合流處理器 (學年主任/校長專用：一次框選全學年所有班級)
+    async function processMultipleExcelFiles(files) {
+      try {
+        const allBlocks = [];
+        let validFileCount = 0;
+        const fileNames = [];
+
+        for (const file of files) {
+          const buffer = await file.arrayBuffer();
+          const workbook = XLSX.read(new Uint8Array(buffer), {type: 'array'});
+          const blocks = extractRawStudentBlocksFromWorkbook(workbook);
+          if (blocks && blocks.length > 0) {
+            allBlocks.push(...blocks);
+            validFileCount++;
+            fileNames.push(file.name);
           }
-
-          // 判斷是否為「個人成績模式」：
-          // 1. 如果是多工作表且不全為 Worksheet
-          const personalSheets = sheetNames.filter(name => name.includes('成績') || name !== 'Worksheet');
-          let isPersonalMode = personalSheets.length > 1;
-
-          // 2. 如果只有 1 個工作表，檢查前 25 列中是否出現「所屬縣市」、「學校名稱」、「學生姓名」或「評量向度」
-          const firstSheet = workbook.Sheets[sheetNames[0]];
-          const firstRows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
-          
-          if (!isPersonalMode && firstRows && firstRows.length > 0) {
-            for (let r = 0; r < Math.min(25, firstRows.length); r++) {
-              const rStr = JSON.stringify(firstRows[r] || '');
-              if (rStr.includes('所屬縣市') || rStr.includes('學生姓名') || rStr.includes('評量向度')) {
-                isPersonalMode = true;
-                break;
-              }
-            }
-          }
-
-          if (isPersonalMode) {
-            // ================= 萬能個人成績深度解碼器 (支援單Sheet垂直堆疊多學生、多Sheet、跨班全年級) =================
-            parseUniversalPersonalWorkbook(workbook);
-          } else {
-            // ================= 模式 A：班級成績總表 =================
-            parseSummarySheetWorkbook(workbook);
-          }
-
-        } catch (err) {
-          console.error(err);
-          alert('解析 Excel 失敗：' + err.message);
         }
-      };
-      reader.readAsArrayBuffer(file);
+
+        if (allBlocks.length === 0) {
+          alert('未能從所選取的 ' + files.length + ' 個檔案中辨識出個人成績資料，請確認檔案格式！');
+          return;
+        }
+
+        parseAndRenderStudentBlocks(allBlocks, `一次匯入 ${validFileCount} 個班級檔案`);
+      } catch (err) {
+        console.error(err);
+        alert('多檔案合流解析失敗：' + err.message);
+      }
     }
 
-    // 萬能個人成績解析器 (支援垂直堆疊連續學生、跨班級多工作表、全年級合併大數據)
-    function parseUniversalPersonalWorkbook(workbook) {
+    // 從 Workbook 中抽取出所有學生的成績卡片塊 (支援單Sheet垂直堆疊 或 每個學生一Sheet)
+    function extractRawStudentBlocksFromWorkbook(workbook) {
       const rawStudentBlocks = [];
+      if (!workbook || !workbook.SheetNames) return rawStudentBlocks;
 
       workbook.SheetNames.forEach(sheetName => {
         const sheet = workbook.Sheets[sheetName];
@@ -28252,7 +28242,6 @@
         }
 
         if (splitIndices.length > 1) {
-          // 垂直堆疊切分
           for (let i = 0; i < splitIndices.length; i++) {
             const start = splitIndices[i];
             const end = (i + 1 < splitIndices.length) ? splitIndices[i + 1] : rows.length;
@@ -28260,16 +28249,69 @@
             if (block.length >= 5) rawStudentBlocks.push(block);
           }
         } else {
-          // 單一工作表即為一位學生
-          rawStudentBlocks.push(rows);
+          // 單一工作表即為一位學生 (排除空白或總表 Worksheet)
+          const firstRowsStr = rows.slice(0, 5).map(r => (r||[]).join(',')).join(';');
+          if (firstRowsStr.includes('所屬縣市') || firstRowsStr.includes('學生姓名') || firstRowsStr.includes('學校名稱')) {
+            rawStudentBlocks.push(rows);
+          }
         }
       });
+      return rawStudentBlocks;
+    }
 
-      if (rawStudentBlocks.length === 0) {
-        alert('未能從檔案中辨識出個人成績資料，請確認檔案格式！');
-        return;
-      }
+    // 單一 Excel 處理器
+    function processExcelFile(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, {type: 'array'});
+          const sheetNames = workbook.SheetNames;
+          
+          if (!sheetNames || sheetNames.length === 0) {
+            alert('檔案內無任何工作表！');
+            return;
+          }
 
+          // 判斷是否為「個人成績模式」：
+          const personalSheets = sheetNames.filter(name => name.includes('成績') || name !== 'Worksheet');
+          let isPersonalMode = personalSheets.length > 1;
+
+          const firstSheet = workbook.Sheets[sheetNames[0]];
+          const firstRows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+          
+          if (!isPersonalMode && firstRows && firstRows.length > 0) {
+            for (let r = 0; r < Math.min(25, firstRows.length); r++) {
+              const rStr = JSON.stringify(firstRows[r] || '');
+              if (rStr.includes('所屬縣市') || rStr.includes('學生姓名') || rStr.includes('評量向度')) {
+                isPersonalMode = true;
+                break;
+              }
+            }
+          }
+
+          if (isPersonalMode) {
+            const blocks = extractRawStudentBlocksFromWorkbook(workbook);
+            if (blocks.length === 0) {
+              alert('未能從檔案中辨識出個人成績資料，請確認檔案格式！');
+              return;
+            }
+            parseAndRenderStudentBlocks(blocks, file.name);
+          } else {
+            // 模式 A：班級成績總表 (橫向單行格式)
+            parseSummarySheetWorkbook(workbook);
+          }
+
+        } catch (err) {
+          console.error(err);
+          alert('解析 Excel 失敗：' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // 核心聚合引擎：處理所有學生成績卡片並渲染看板
+    function parseAndRenderStudentBlocks(rawStudentBlocks, sourceInfo) {
       const students = [];
       const q_stats = {};
       for (let q = 1; q <= 25; q++) {
@@ -28299,7 +28341,6 @@
           if (rStr.includes('評量向度') && r_dims_start === -1) r_dims_start = r + 1;
         }
 
-        // 提取學校名稱、年級與班級
         let curSchool = schoolName;
         let curGrade = grade;
         let curClass = '301';
@@ -28353,22 +28394,23 @@
         if (curGrade) grade = curGrade;
         if (curClass) classNamesSet.add(curClass);
 
-        let score = 0.5;
-        let pr_city = null;
-        let pr_all = null;
-
+        let score = 0;
+        let pr_city = 50;
+        let pr_all = 50;
         if (r_score) {
           for (let c = 0; c < r_score.length; c++) {
             const val = String(r_score[c] || '').trim();
             if (val === '答對率' && c + 1 < r_score.length) {
-              const rateVal = String(r_score[c + 1] || '0%').replace('%', '').trim();
-              score = parseFloat(rateVal) / 100.0;
+              const rateStr = String(r_score[c + 1] || '0%').replace('%', '').trim();
+              score = parseFloat(rateStr) / 100.0;
             }
             if (val.includes('PR值(所屬縣市)') && c + 1 < r_score.length) {
-              pr_city = parseInt(r_score[c + 1]) || null;
+              const prVal = parseFloat(r_score[c + 1] || 50);
+              if (!isNaN(prVal)) pr_city = prVal;
             }
-            if (val.includes('PR值(全部') && c + 1 < r_score.length) {
-              pr_all = parseInt(r_score[c + 1]) || null;
+            if (val.includes('PR值(全國)') && c + 1 < r_score.length) {
+              const prVal = parseFloat(r_score[c + 1] || 50);
+              if (!isNaN(prVal)) pr_all = prVal;
             }
           }
         }
@@ -28513,10 +28555,14 @@
       renderFullClassDashboard();
       initStep3Units();
 
-      alert(`🎉 成功匯入【${currentClassData.schoolName} · ${currentClassData.className}】！\n\n已成功解析 ${students.length} 位學生數據！\n${isMultiClass ? `🌟 系統已自動啟動「全年級跨班診斷模式」：\n1. 各班座號已依班級自動隔離，處方箋與錯題卷完全獨立，絕不衝突！\n2. 學生名冊頂部已自動生成「班級分流標籤」，可隨時切換單班或全年級查看！` : ''}`);
+      const summaryMsg = isMultiClass 
+        ? `🎉 成功匯入【${currentClassData.schoolName} · ${currentClassData.className}】！\n\n已成功匯總共 ${students.length} 位學生數據（跨 ${classList.join('、')} 班）！\n🌟 已為您自動啟動「全年級跨班診斷模式」：\n1. 各班座號已依班級自動隔離，處方箋與錯題卷完全獨立，絕不衝突！\n2. 學生名冊頂部已自動生成「班級分流標籤」，可隨時切換單班或全年級查看！`
+        : `🎉 成功匯入【${currentClassData.schoolName} · ${currentClassData.className}】！\n\n已成功解析 ${students.length} 位學生數據！`;
+
+      alert(summaryMsg);
     }
 
-        // 解析班級成績總表 (模式 A)
+
     function parseSummarySheetWorkbook(workbook) {
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonRows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
