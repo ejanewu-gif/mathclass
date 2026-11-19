@@ -292,7 +292,7 @@
               </span>
               <div class="text-right shrink-0">
                 <div class="flex items-center gap-1.5 justify-end">
-                  <span class="text-[11px] text-slate-400 font-mono">本班</span>
+                  <span id="lblCogCuScope" class="lblScopeThis text-[11px] text-slate-400 font-mono">本班</span>
                   <span id="cogCuRate" class="text-lg font-black text-white font-mono">61.6%</span>
                 </div>
                 <div class="text-[11px] font-mono text-slate-400 mt-0.5">
@@ -318,7 +318,7 @@
               </span>
               <div class="text-right shrink-0">
                 <div class="flex items-center gap-1.5 justify-end">
-                  <span class="text-[11px] text-slate-400 font-mono">本班</span>
+                  <span id="lblCogPeScope" class="lblScopeThis text-[11px] text-slate-400 font-mono">本班</span>
                   <span id="cogPeRate" class="text-lg font-black text-white font-mono">50.7%</span>
                 </div>
                 <div class="text-[11px] font-mono text-slate-400 mt-0.5">
@@ -344,7 +344,7 @@
               </span>
               <div class="text-right shrink-0">
                 <div class="flex items-center gap-1.5 justify-end">
-                  <span class="text-[11px] text-slate-400 font-mono">本班</span>
+                  <span id="lblCogPsScope" class="lblScopeThis text-[11px] text-slate-400 font-mono">本班</span>
                   <span id="cogPsRate" class="text-lg font-black text-white font-mono">60.7%</span>
                 </div>
                 <div class="text-[11px] font-mono text-slate-400 mt-0.5">
@@ -28654,6 +28654,10 @@ function loadDemoClass50A() {
       if (elCogTitle) elCogTitle.innerText = `${scopeThis}體質診斷`;
 
       // 4. 三層次字卡上的標籤
+      ['lblCogCuScope', 'lblCogPeScope', 'lblCogPsScope'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = scopeThis;
+      });
       document.querySelectorAll('.lblScopeThis').forEach(el => {
         el.innerText = scopeThis;
       });
@@ -29068,9 +29072,9 @@ function loadDemoClass50A() {
       if (pk < cu && pk < ps) {
         narrative = `${currentClassData.isMultiClass ? '全年級' : '本班'}最為關鍵的盲點在於<strong>「程序執行 (PK ${pk.toFixed(1)}%)」顯著落後於「概念理解 (${cu.toFixed(1)}%)」與「解題思考 (${ps.toFixed(1)}%)」</strong>！這代表孩子們讀得懂題目、也能理解核心概念，但在分數運算、通分約分或多步驟計算時，容易發生疏漏或計算卡關。建議課堂上加強<strong>步驟自我檢核口訣與同儕互相驗算機制</strong>。`;
       } else if (ps < cu && ps < pk) {
-        narrative = `本班<strong>「解題思考 (PS ${ps.toFixed(1)}%)」</strong>為主要受挫層次。學生基礎概念與基本計算無虞，但一旦遭遇長題幹、多條件交織或圖表轉譯題型容易放棄。建議教學時增加<strong>「用自己的話重述題意」與「圈出關鍵限制條件」的引導對話</strong>。`;
+        narrative = `${currentClassData.isMultiClass ? '全年級' : '本班'}<strong>「解題思考 (PS ${ps.toFixed(1)}%)」</strong>為主要受挫層次。學生基礎概念與基本計算無虞，但一旦遭遇長題幹、多條件交織或圖表轉譯題型容易放棄。建議教學時增加<strong>「用自己的話重述題意」與「圈出關鍵限制條件」的引導對話</strong>。`;
       } else {
-        narrative = `本班三大認知維度發展均勻，概念理解達 ${cu.toFixed(1)}%。後續教學建議聚焦於量感題型之情境應用，並給予中等與精熟群更多進階探究題型挑戰。`;
+        narrative = `${currentClassData.isMultiClass ? '全年級' : '本班'}三大認知維度發展均勻，概念理解達 ${cu.toFixed(1)}%。後續教學建議聚焦於量感題型之情境應用，並給予中等與精熟群更多進階探究題型挑戰。`;
       }
       document.getElementById('pedagogicalNarrative').innerHTML = narrative;
     }
