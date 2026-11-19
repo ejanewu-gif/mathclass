@@ -225,9 +225,7 @@
           <div id="statNeedHelpCount" class="text-2xl sm:text-3xl font-black text-rose-300 font-mono mt-1">
             2 人 (14.3%)
           </div>
-          <div class="text-[11px] text-rose-300/80 mt-1 truncate">
-            宇智波佐助、野原新之助 (點擊一鍵印錯題卷)
-          </div>
+          <div id="statNeedHelpNames" class="text-[11px] text-rose-300/80 mt-1 truncate">宇智波佐助、野原新之助 (點擊一鍵印錯題卷)</div>
         </div>
 
       </div>
@@ -28150,6 +28148,7 @@
     function toggleMaskNames() {
       maskStudentNames = document.getElementById('maskNamesToggle').checked;
       renderStudentTable();
+      renderTierPreviewNames();
     }
 
     // 載入示範班級
@@ -28753,6 +28752,7 @@ function loadDemoClass50A() {
       const needHelp = validStudents.filter(s => (s.pr_city !== null && s.pr_city < 25) || s.level === '待加強');
       const needHelpRate = validStudents.length > 0 ? (needHelp.length / validStudents.length * 100) : 0;
       document.getElementById('statNeedHelpCount').innerText = `${needHelp.length} 人 (${needHelpRate.toFixed(1)}%)`;
+      renderTierPreviewNames(validStudents);
 
       // PR Tiers
       renderPrTiers(validStudents);
@@ -28774,6 +28774,44 @@ function loadDemoClass50A() {
     }
 
     // PR 梯隊分佈渲染
+    
+    // 渲染卡片下方頂標群與待扶助群的真實學生名單預覽
+    function renderTierPreviewNames(validStudents) {
+      if (!currentClassData || !currentClassData.students) return;
+      if (!validStudents) {
+        validStudents = currentClassData.students.filter(s => s.special === '否' && s.score !== null);
+      }
+      const topTier = validStudents.filter(s => s.level === '精熟' || (s.pr_city !== null && s.pr_city >= 75));
+      const needHelp = validStudents.filter(s => (s.pr_city !== null && s.pr_city < 25) || s.level === '待加強');
+
+      const formatStudentName = (s) => {
+        const rawName = s.name;
+        const masked = maskStudentNames ? (rawName.length > 2 ? rawName[0] + '○' + rawName.slice(2) : rawName[0] + '○') : rawName;
+        return (currentClassData.isMultiClass && s.className) ? `[${s.className}]${masked}` : masked;
+      };
+
+      const topNamesEl = document.getElementById('statTopTierNames');
+      if (topNamesEl) {
+        if (topTier.length === 0) {
+          topNamesEl.innerText = '無符合學生';
+        } else {
+          const preview = topTier.slice(0, 5).map(formatStudentName).join('、');
+          topNamesEl.innerText = topTier.length > 5 ? `${preview} 等 ${topTier.length} 人` : preview;
+        }
+      }
+
+      const helpNamesEl = document.getElementById('statNeedHelpNames');
+      if (helpNamesEl) {
+        if (needHelp.length === 0) {
+          helpNamesEl.innerText = '全數達標，無待扶助學生';
+        } else {
+          const preview = needHelp.slice(0, 4).map(formatStudentName).join('、');
+          const extra = needHelp.length > 4 ? ` 等 ${needHelp.length} 人` : '';
+          helpNamesEl.innerText = `${preview}${extra} (點擊一鍵印錯題卷)`;
+        }
+      }
+    }
+
     function renderPrTiers(validStudents) {
       const total = validStudents.length;
       const t1 = validStudents.filter(s => s.level === '精熟' || (s.pr_city !== null && s.pr_city >= 75)).length;
