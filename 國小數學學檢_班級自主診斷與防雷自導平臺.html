@@ -208,7 +208,7 @@
           <div id="statTopTierCount" class="text-2xl sm:text-3xl font-black text-emerald-300 font-mono mt-1">
             5 人 (35.7%)
           </div>
-          <div id="statTopTierDesc" class="text-[11px] text-emerald-300/80 mt-1 truncate">
+          <div id="statTopTierNames" class="text-[11px] text-emerald-300/80 mt-1 truncate">
             魯夫、遠坂凜、灰原哀、毛利蘭、約兒
           </div>
         </div>
@@ -28790,7 +28790,7 @@ function loadDemoClass50A() {
         return (currentClassData.isMultiClass && s.className) ? `[${s.className}]${masked}` : masked;
       };
 
-      const topNamesEl = document.getElementById('statTopTierNames');
+      const topNamesEl = document.getElementById('statTopTierNames') || document.getElementById('statTopTierDesc');
       if (topNamesEl) {
         if (topTier.length === 0) {
           topNamesEl.innerText = '無符合學生';
