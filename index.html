@@ -76,45 +76,53 @@
 
   <!-- Top Navigation Header -->
   <header class="bg-navy-900 text-white shadow-lg sticky top-0 z-50 border-b border-slate-700">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center shadow-md font-black text-xl text-white">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex justify-between items-center gap-2 sm:gap-4">
+      <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center shadow-md font-black text-base sm:text-xl text-white shrink-0">
           數
         </div>
-        <div>
-          <div class="flex items-center space-x-2">
-            <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">115學年度入校專用</span>
-            
+        <div class="min-w-0">
+          <div class="flex items-center space-x-1.5 sm:space-x-2">
+            <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">115學年度</span>
+            <span class="text-[10px] text-slate-400 hidden sm:inline">入校專用</span>
           </div>
-          <h1 class="text-base sm:text-lg font-bold text-white tracking-wide">臺南市國小數學科教學進度 × 學力檢測對照導航</h1>
+          <h1 class="text-xs sm:text-lg font-bold text-white tracking-wide truncate">臺南市國小數學科教學進度 × 學力檢測對照導航</h1>
         </div>
       </div>
 
       <!-- Attribution Badge -->
-      <div class="flex items-center space-x-2">
-        <div class="px-3.5 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-200 text-xs sm:text-sm font-medium flex items-center space-x-2 shadow-xs">
+      <div class="flex items-center space-x-2 shrink-0">
+        <div class="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-200 text-[11px] sm:text-sm font-medium flex items-center space-x-1.5 sm:space-x-2 shadow-xs">
           <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-          <span class="tracking-wide text-slate-200 font-semibold">臺南市國小數學輔導團 製作分享</span>
+          <span class="tracking-wide text-slate-200 font-semibold hidden md:inline">臺南市國小數學輔導團 製作分享</span>
+          <span class="tracking-wide text-slate-200 font-semibold md:hidden">數學輔導團</span>
         </div>
       </div>
     </div>
   </header>
 
   <!-- Main Workspace -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full flex flex-col gap-6">
+  <main class="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-3 sm:py-6 flex-1 w-full flex flex-col gap-3 sm:gap-6">
 
     <!-- Hero Guidance Banner -->
-    <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-xl relative overflow-hidden border border-slate-700/50">
+    <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-xl sm:rounded-2xl p-3.5 sm:p-6 text-white shadow-lg relative overflow-hidden border border-slate-700/50">
       <div class="relative z-10 w-full">
-        <div class="inline-flex items-center space-x-2 bg-sky-500/20 border border-sky-400/40 rounded-full px-3 py-1 text-xs font-semibold text-sky-200 mb-2.5">
-          <span>🎯 入校陪伴主軸</span>
-          <span>•</span>
-          <span>不盲刷舊題本，守護新課地基</span>
+        <div class="flex items-center justify-between gap-2">
+          <div class="inline-flex items-center space-x-1.5 sm:space-x-2 bg-sky-500/20 border border-sky-400/40 rounded-full px-2.5 py-0.5 sm:px-3 sm:py-1 text-[11px] sm:text-xs font-semibold text-sky-200">
+            <span>🎯 入校陪伴主軸</span>
+            <span class="hidden sm:inline">•</span>
+            <span class="hidden sm:inline">不盲刷舊題本，守護新課地基</span>
+          </div>
+          <!-- Mobile toggle button for guidance details -->
+          <button type="button" onclick="toggleHeroGuidance()" id="btnToggleHero" class="sm:hidden text-[11px] font-bold text-sky-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 px-2.5 py-1 rounded-lg border border-slate-600 flex items-center space-x-1 transition-all">
+            <span id="heroToggleText">展開說明 ▾</span>
+          </button>
         </div>
-        <h2 class="text-xl sm:text-2xl font-black mb-2 text-white leading-tight">
+        <h2 class="text-sm sm:text-2xl font-black mt-2 mb-1 sm:mb-2 text-white leading-snug">
           下週教哪個單元？3 秒預警學生的「致命學習斷層」
         </h2>
-        <div class="text-sm text-slate-300 leading-relaxed flex flex-col gap-1.5">
+        <!-- Guidance description: Collapsible on mobile, always visible on sm+ -->
+        <div id="heroGuidanceContent" class="hidden sm:flex text-xs sm:text-sm text-slate-300 leading-relaxed flex-col gap-1.5 pt-1">
           <p class="font-bold text-sky-200">
             💡 學力檢測的診斷結果，能幫助我們為新單元的教學做預備——課前提供先備練習打底，課中精準掌握學生盲點與迷思！
           </p>
@@ -129,62 +137,68 @@
 
     
     <!-- Primary View Mode Navigation Bar (頂層三大模式導航) -->
-    <div class="bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl border-2 border-slate-700 shadow-xl flex flex-wrap sm:flex-nowrap gap-2.5">
+    <div class="bg-slate-900/95 backdrop-blur-md p-1.5 sm:p-2 rounded-xl sm:rounded-2xl border-2 border-slate-700 shadow-xl grid grid-cols-3 gap-1.5 sm:gap-2.5">
       <!-- 模式一：對照進度預警 (原單元先備預警) -->
-      <button onclick="switchTab('units')" id="btnTabUnits" class="flex-1 min-w-[200px] py-3.5 px-4 rounded-xl font-black text-sm sm:text-base flex items-center justify-center space-x-2 transition-all shadow-md bg-sky-600 text-white ring-2 ring-sky-400">
-        <span class="text-lg">🎯</span>
-        <span>對照進度預警</span>
-        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-sky-800/80 text-sky-200 border border-sky-400/30">單元 × 先備打底</span>
+      <button onclick="switchTab('units')" id="btnTabUnits" class="py-2 sm:py-3.5 px-1 sm:px-4 rounded-lg sm:rounded-xl font-black text-xs sm:text-base flex flex-col sm:flex-row items-center justify-center sm:space-x-2 transition-all shadow-md bg-sky-600 text-white ring-2 ring-sky-400">
+        <span class="text-base sm:text-lg">🎯</span>
+        <span class="truncate">對照進度預警</span>
+        <span class="hidden md:inline-block text-[11px] font-bold px-2 py-0.5 rounded-full bg-sky-800/80 text-sky-200 border border-sky-400/30">單元 × 先備打底</span>
       </button>
 
       <!-- 模式二：對照指標題庫 (全新納入 mathtest 功能) -->
-      <button onclick="switchTab('indicators')" id="btnTabIndicators" class="flex-1 min-w-[200px] py-3.5 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center space-x-2 transition-all bg-slate-800 text-slate-300 hover:bg-slate-700/80 hover:text-white border border-slate-700">
-        <span class="text-lg">📚</span>
-        <span>對照指標題庫</span>
-        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600">課綱指標 × 考情分析</span>
+      <button onclick="switchTab('indicators')" id="btnTabIndicators" class="py-2 sm:py-3.5 px-1 sm:px-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-base flex flex-col sm:flex-row items-center justify-center sm:space-x-2 transition-all bg-slate-800 text-slate-300 hover:bg-slate-700/80 hover:text-white border border-slate-700">
+        <span class="text-base sm:text-lg">📚</span>
+        <span class="truncate">對照指標題庫</span>
+        <span class="hidden md:inline-block text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600">課綱指標 × 考情分析</span>
       </button>
 
       <!-- 模式三：歷年題本檢視 (原25題全局看板) -->
-      <button onclick="switchTab('matrix')" id="btnTabMatrix" class="flex-1 min-w-[200px] py-3.5 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center space-x-2 transition-all bg-slate-800 text-slate-300 hover:bg-slate-700/80 hover:text-white border border-slate-700">
-        <span class="text-lg">📊</span>
-        <span>歷年題本檢視</span>
-        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600">25題全局看板</span>
+      <button onclick="switchTab('matrix')" id="btnTabMatrix" class="py-2 sm:py-3.5 px-1 sm:px-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-base flex flex-col sm:flex-row items-center justify-center sm:space-x-2 transition-all bg-slate-800 text-slate-300 hover:bg-slate-700/80 hover:text-white border border-slate-700">
+        <span class="text-base sm:text-lg">📊</span>
+        <span class="truncate">歷年題本檢視</span>
+        <span class="hidden md:inline-block text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600">25題全局看板</span>
       </button>
     </div>
 
     <!-- Secondary Dynamic Controls Container (第二層動態條件列) -->
     <!-- Controls for Mode 1: Units -->
-    <div id="controlsUnits" class="bg-white rounded-2xl p-5 sm:p-6 shadow-md border-2 border-slate-300 flex flex-col gap-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div id="controlsUnits" class="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-md border-2 border-slate-300 flex flex-col gap-2.5 sm:gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
         <!-- Grade Select -->
         <div>
-          <label class="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-sky-600"></span>
-            <span>1. 選擇年級</span>
+          <label class="block text-[11px] sm:text-xs font-black text-slate-800 uppercase tracking-wider mb-1 sm:mb-2 flex items-center justify-between">
+            <span class="flex items-center space-x-1.5">
+              <span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-sky-600"></span>
+              <span>1. 選擇年級</span>
+            </span>
+            <span class="text-[10px] text-slate-500 font-normal sm:hidden">點選切換</span>
           </label>
-          <div class="grid grid-cols-4 gap-1.5 p-1.5 bg-slate-100 rounded-xl border-2 border-slate-300 shadow-inner" id="gradeSelector">
-            <button onclick="setGrade(3)" data-g="3" class="grade-btn py-2 text-sm font-bold rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">三年級</button>
-            <button onclick="setGrade(4)" data-g="4" class="grade-btn py-2 text-sm font-bold rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">四年級</button>
-            <button onclick="setGrade(5)" data-g="5" class="grade-btn py-2 text-sm font-bold rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">五年級</button>
-            <button onclick="setGrade(6)" data-g="6" class="grade-btn py-2 text-sm font-bold rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">六年級</button>
+          <div class="grid grid-cols-4 gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-slate-100 rounded-lg sm:rounded-xl border-2 border-slate-300 shadow-inner" id="gradeSelector">
+            <button onclick="setGrade(3)" data-g="3" class="grade-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">三年級</button>
+            <button onclick="setGrade(4)" data-g="4" class="grade-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">四年級</button>
+            <button onclick="setGrade(5)" data-g="5" class="grade-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">五年級</button>
+            <button onclick="setGrade(6)" data-g="6" class="grade-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">六年級</button>
           </div>
         </div>
 
         <!-- Publisher Select -->
         <div>
-          <label class="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
-            <span>2. 課本版本</span>
+          <label class="block text-[11px] sm:text-xs font-black text-slate-800 uppercase tracking-wider mb-1 sm:mb-2 flex items-center justify-between">
+            <span class="flex items-center space-x-1.5">
+              <span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-indigo-600"></span>
+              <span>2. 課本版本</span>
+            </span>
+            <span class="text-[10px] text-slate-500 font-normal sm:hidden">點選切換</span>
           </label>
-          <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-100 rounded-xl border-2 border-slate-300 shadow-inner" id="pubSelector">
-            <button onclick="setPublisher('康軒')" data-p="康軒" class="pub-btn py-2 text-sm font-bold rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">康軒版</button>
-            <button onclick="setPublisher('翰林')" data-p="翰林" class="pub-btn py-2 text-sm font-bold rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">翰林版</button>
-            <button onclick="setPublisher('南一')" data-p="南一" class="pub-btn py-2 text-sm font-bold rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">南一版</button>
+          <div class="grid grid-cols-3 gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-slate-100 rounded-lg sm:rounded-xl border-2 border-slate-300 shadow-inner" id="pubSelector">
+            <button onclick="setPublisher('康軒')" data-p="康軒" class="pub-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">康軒版</button>
+            <button onclick="setPublisher('翰林')" data-p="翰林" class="pub-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">翰林版</button>
+            <button onclick="setPublisher('南一')" data-p="南一" class="pub-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">南一版</button>
           </div>
         </div>
 
         <!-- Semester Select -->
-        <div>
+        <div class="hidden sm:block">
           <label class="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
             <span>3. 學期進度</span>
@@ -198,111 +212,117 @@
     </div>
 
     <!-- Controls for Mode 2: Indicators (對照指標題庫專屬控制列) -->
-    <div id="controlsIndicators" class="hidden bg-white rounded-2xl p-5 sm:p-6 shadow-md border-2 border-slate-300 flex flex-col gap-4">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+    <div id="controlsIndicators" class="hidden bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-md border-2 border-slate-300 flex flex-col gap-2.5 sm:gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-2.5 sm:gap-4 items-end">
         <!-- Grade Selector for Indicators -->
         <div class="lg:col-span-4">
-          <label class="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+          <label class="block text-[11px] sm:text-xs font-black text-slate-800 uppercase tracking-wider mb-1 sm:mb-2 flex items-center space-x-1.5">
+            <span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-blue-600"></span>
             <span>年級指標篩選</span>
           </label>
-          <div class="grid grid-cols-5 gap-1 p-1 bg-slate-100 rounded-xl border-2 border-slate-300 shadow-inner" id="indGradeSelector">
-            <button onclick="setIndicatorGrade('all')" data-ig="all" class="ind-grade-btn py-1.5 text-xs font-black rounded-lg transition-all bg-blue-600 text-white shadow-xs">全部</button>
-            <button onclick="setIndicatorGrade(3)" data-ig="3" class="ind-grade-btn py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">三年級</button>
-            <button onclick="setIndicatorGrade(4)" data-ig="4" class="ind-grade-btn py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">四年級</button>
-            <button onclick="setIndicatorGrade(5)" data-ig="5" class="ind-grade-btn py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">五年級</button>
-            <button onclick="setIndicatorGrade(6)" data-ig="6" class="ind-grade-btn py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">六年級</button>
+          <div class="grid grid-cols-5 gap-1 p-1 bg-slate-100 rounded-lg sm:rounded-xl border-2 border-slate-300 shadow-inner" id="indGradeSelector">
+            <button onclick="setIndicatorGrade('all')" data-ig="all" class="ind-grade-btn py-1 sm:py-1.5 text-xs font-black rounded-md sm:rounded-lg transition-all bg-blue-600 text-white shadow-xs">全部</button>
+            <button onclick="setIndicatorGrade(3)" data-ig="3" class="ind-grade-btn py-1 sm:py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">3年級</button>
+            <button onclick="setIndicatorGrade(4)" data-ig="4" class="ind-grade-btn py-1 sm:py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">4年級</button>
+            <button onclick="setIndicatorGrade(5)" data-ig="5" class="ind-grade-btn py-1 sm:py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">5年級</button>
+            <button onclick="setIndicatorGrade(6)" data-ig="6" class="ind-grade-btn py-1 sm:py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">6年級</button>
           </div>
         </div>
 
         <!-- Domain Selector for Indicators -->
         <div class="lg:col-span-4">
-          <label class="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+          <label class="block text-[11px] sm:text-xs font-black text-slate-800 uppercase tracking-wider mb-1 sm:mb-2 flex items-center space-x-1.5">
+            <span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-indigo-600"></span>
             <span>領域向度篩選</span>
           </label>
-          <div class="grid grid-cols-5 gap-1 p-1 bg-slate-100 rounded-xl border-2 border-slate-300 shadow-inner" id="indDomainSelector">
-            <button onclick="setIndicatorDomain('all')" data-id="all" class="ind-domain-btn py-1.5 text-xs font-black rounded-lg transition-all bg-indigo-600 text-white shadow-xs">全部</button>
-            <button onclick="setIndicatorDomain('N')" data-id="N" class="ind-domain-btn py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">N 數與量</button>
-            <button onclick="setIndicatorDomain('S')" data-id="S" class="ind-domain-btn py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">S 空間形狀</button>
-            <button onclick="setIndicatorDomain('R')" data-id="R" class="ind-domain-btn py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">R 關係</button>
-            <button onclick="setIndicatorDomain('D')" data-id="D" class="ind-domain-btn py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">D 資料機率</button>
+          <div class="grid grid-cols-5 gap-1 p-1 bg-slate-100 rounded-lg sm:rounded-xl border-2 border-slate-300 shadow-inner" id="indDomainSelector">
+            <button onclick="setIndicatorDomain('all')" data-id="all" class="ind-domain-btn py-1 sm:py-1.5 text-xs font-black rounded-md sm:rounded-lg transition-all bg-indigo-600 text-white shadow-xs">全部</button>
+            <button onclick="setIndicatorDomain('N')" data-id="N" class="ind-domain-btn py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">N 數與量</button>
+            <button onclick="setIndicatorDomain('S')" data-id="S" class="ind-domain-btn py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">S 空間</button>
+            <button onclick="setIndicatorDomain('R')" data-id="R" class="ind-domain-btn py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">R 關係</button>
+            <button onclick="setIndicatorDomain('D')" data-id="D" class="ind-domain-btn py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">D 機率</button>
           </div>
         </div>
 
         <!-- Keyword Search Input -->
         <div class="lg:col-span-4">
-          <label class="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+          <label class="block text-[11px] sm:text-xs font-black text-slate-800 uppercase tracking-wider mb-1 sm:mb-2 flex items-center space-x-1.5">
+            <span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-amber-500"></span>
             <span>指標代碼與關鍵字搜尋</span>
           </label>
           <div class="relative">
-            <input type="text" id="indKeywordInput" placeholder="搜尋指標代號或關鍵字（如：N-3-1、圓、乘法、分數）..." oninput="handleIndicatorSearch(this.value)" class="w-full pl-9 pr-8 py-2 text-xs sm:text-sm rounded-xl border-2 border-slate-300 focus:border-blue-500 focus:outline-none transition-all shadow-inner font-medium">
-            <span class="absolute left-3 top-2.5 text-slate-400 text-sm pointer-events-none">🔍</span>
-            <button onclick="clearIndicatorSearch()" id="btnClearIndSearch" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-xs px-1.5 py-0.5 rounded bg-slate-200">✕</button>
+            <input type="text" id="indKeywordInput" placeholder="搜尋指標代號或關鍵字（如：N-3-1、圓、乘法）..." oninput="handleIndicatorSearch(this.value)" class="w-full pl-8 sm:pl-9 pr-8 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg sm:rounded-xl border-2 border-slate-300 focus:border-blue-500 focus:outline-none transition-all shadow-inner font-medium">
+            <span class="absolute left-2.5 sm:left-3 top-2 sm:top-2.5 text-slate-400 text-xs sm:text-sm pointer-events-none">🔍</span>
+            <button onclick="clearIndicatorSearch()" id="btnClearIndSearch" class="hidden absolute right-2.5 top-1.5 sm:top-2 text-slate-400 hover:text-slate-600 text-xs px-1.5 py-0.5 rounded bg-slate-200">✕</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Controls for Mode 3: Matrix (歷年題本檢視專屬控制列) -->
-    <div id="controlsMatrix" class="hidden bg-white rounded-2xl p-5 sm:p-6 shadow-md border-2 border-slate-300 flex flex-col gap-4">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+    <div id="controlsMatrix" class="hidden bg-white rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-md border-2 border-slate-300 flex flex-col gap-2.5 sm:gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-2.5 sm:gap-4 items-center">
         <!-- Grade Select for Matrix -->
         <div class="lg:col-span-4">
-          <label class="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-sky-600"></span>
+          <label class="block text-[11px] sm:text-xs font-black text-slate-800 uppercase tracking-wider mb-1 sm:mb-2 flex items-center space-x-1.5">
+            <span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-sky-600"></span>
             <span>檢視年級</span>
           </label>
-          <div class="grid grid-cols-4 gap-1.5 p-1.5 bg-slate-100 rounded-xl border-2 border-slate-300 shadow-inner">
-            <button onclick="setGrade(3)" data-g="3" class="grade-btn py-2 text-sm font-bold rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">三年級</button>
-            <button onclick="setGrade(4)" data-g="4" class="grade-btn py-2 text-sm font-bold rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">四年級</button>
-            <button onclick="setGrade(5)" data-g="5" class="grade-btn py-2 text-sm font-bold rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">五年級</button>
-            <button onclick="setGrade(6)" data-g="6" class="grade-btn py-2 text-sm font-bold rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">六年級</button>
+          <div class="grid grid-cols-4 gap-1 sm:gap-1.5 p-1 sm:p-1.5 bg-slate-100 rounded-lg sm:rounded-xl border-2 border-slate-300 shadow-inner">
+            <button onclick="setGrade(3)" data-g="3" class="grade-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">三年級</button>
+            <button onclick="setGrade(4)" data-g="4" class="grade-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">四年級</button>
+            <button onclick="setGrade(5)" data-g="5" class="grade-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">五年級</button>
+            <button onclick="setGrade(6)" data-g="6" class="grade-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950">六年級</button>
           </div>
         </div>
 
         <!-- Year Select for Matrix -->
         <div class="lg:col-span-5">
-          <label class="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center space-x-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+          <label class="block text-[11px] sm:text-xs font-black text-slate-800 uppercase tracking-wider mb-1 sm:mb-2 flex items-center space-x-1.5">
+            <span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-indigo-600"></span>
             <span>學年度題本</span>
           </label>
-          <div class="grid grid-cols-7 gap-1 p-1 bg-slate-100 rounded-xl border-2 border-slate-300 shadow-inner" id="matrixYearSelector">
-            <button onclick="setMatrixYear('114')" data-my="114" class="py-1.5 text-xs font-black rounded-lg transition-all bg-indigo-600 text-white shadow-xs">114</button>
-            <button onclick="setMatrixYear('113')" data-my="113" class="py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">113</button>
-            <button onclick="setMatrixYear('112')" data-my="112" class="py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">112</button>
-            <button onclick="setMatrixYear('111')" data-my="111" class="py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">111</button>
-            <button onclick="setMatrixYear('110')" data-my="110" class="py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">110</button>
-            <button onclick="setMatrixYear('109')" data-my="109" class="py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">109</button>
-            <button onclick="setMatrixYear('115')" data-my="115" class="py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-amber-700 border border-amber-300 hover:bg-amber-50">115預</button>
+          <div class="grid grid-cols-7 gap-0.5 sm:gap-1 p-0.5 sm:p-1 bg-slate-100 rounded-lg sm:rounded-xl border-2 border-slate-300 shadow-inner" id="matrixYearSelector">
+            <button onclick="setMatrixYear('114')" data-my="114" class="py-1 sm:py-1.5 text-xs font-black rounded-md sm:rounded-lg transition-all bg-indigo-600 text-white shadow-xs">114</button>
+            <button onclick="setMatrixYear('113')" data-my="113" class="py-1 sm:py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">113</button>
+            <button onclick="setMatrixYear('112')" data-my="112" class="py-1 sm:py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">112</button>
+            <button onclick="setMatrixYear('111')" data-my="111" class="py-1 sm:py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">111</button>
+            <button onclick="setMatrixYear('110')" data-my="110" class="py-1 sm:py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">110</button>
+            <button onclick="setMatrixYear('109')" data-my="109" class="py-1 sm:py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-slate-700 border border-slate-300 hover:bg-slate-50">109</button>
+            <button onclick="setMatrixYear('115')" data-my="115" class="py-1 sm:py-1.5 text-xs font-bold rounded-md sm:rounded-lg transition-all bg-white text-amber-700 border border-amber-300 hover:bg-amber-50">115預</button>
           </div>
         </div>
 
         <!-- Legend for Matrix (精準門檻標準) -->
-        <div class="lg:col-span-3 flex items-center justify-end space-x-3 text-xs font-bold text-slate-700 pt-5">
-          <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span><span>&lt;50% 重災(優先打底)</span></div>
-          <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span><span>50~69% 警戒(需留意)</span></div>
-          <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span>≥70% 穩固(穩定)</span></div>
+        <div class="lg:col-span-3 flex items-center justify-start sm:justify-end flex-wrap gap-2 text-[11px] sm:text-xs font-bold text-slate-700 pt-1 sm:pt-5">
+          <div class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span><span>&lt;50% 重災(優先打底)</span></div>
+          <div class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span><span>50~69% 警戒</span></div>
+          <div class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span>≥70% 穩固</span></div>
         </div>
       </div>
     </div>
 
 
     <!-- VIEW 1: Unit Alignment Mode -->
-    <div id="viewUnits" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div id="viewUnits" class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
       
       <!-- Left: Unit Selection List -->
-      <div class="lg:col-span-4 bg-white rounded-2xl p-4 sm:p-5 shadow-md border-2 border-slate-300">
-        <div class="flex items-center justify-between mb-3.5 pb-2.5 border-b-2 border-slate-200">
-          <h3 class="font-bold text-base text-slate-800 flex items-center space-x-2">
+      <div class="lg:col-span-4 bg-white rounded-xl sm:rounded-2xl p-3.5 sm:p-5 shadow-md border-2 border-slate-300">
+        <div class="flex items-center justify-between mb-2.5 sm:mb-3.5 pb-2 sm:pb-2.5 border-b-2 border-slate-200">
+          <h3 class="font-bold text-sm sm:text-base text-slate-800 flex items-center space-x-1.5 sm:space-x-2">
             <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
             <span>單元清單目錄</span>
           </h3>
-          <span id="unitBadge" class="text-xs bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1 rounded-full font-bold">10 個單元</span>
+          <div class="flex items-center space-x-2">
+            <span id="unitBadge" class="text-[11px] sm:text-xs bg-slate-100 text-slate-700 border border-slate-300 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-bold">10 個單元</span>
+            <!-- Mobile fast jump to detail -->
+            <button type="button" onclick="jumpToUnitDetail()" class="lg:hidden text-[11px] font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-300 px-2 py-0.5 rounded-lg flex items-center space-x-0.5" title="跳至所選單元之診斷處方與考題">
+              <span>看處方</span><span>⬇</span>
+            </button>
+          </div>
         </div>
 
-        <div id="unitListContainer" class="space-y-2 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
+        <div id="unitListContainer" class="space-y-1.5 sm:space-y-2 max-h-[240px] sm:max-h-[320px] lg:max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
           <!-- Dynamically Rendered -->
         </div>
       </div>
@@ -596,20 +616,25 @@
     <div id="viewIndicators" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       
       <!-- Left: 108 Curriculum Indicator Navigation Tree -->
-      <div class="lg:col-span-4 bg-white rounded-2xl shadow-md border-2 border-slate-300 p-4 sticky top-20 max-h-[calc(100vh-100px)] flex flex-col gap-3">
-        <div class="pb-3 border-b-2 border-slate-200">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="font-black text-slate-900 text-sm flex items-center space-x-1.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+      <div class="lg:col-span-4 bg-white rounded-xl sm:rounded-2xl shadow-md border-2 border-slate-300 p-3.5 sm:p-4 relative lg:sticky lg:top-20 max-h-[260px] sm:max-h-[320px] lg:max-h-[calc(100vh-100px)] flex flex-col gap-2.5 sm:gap-3">
+        <div class="pb-2.5 sm:pb-3 border-b-2 border-slate-200">
+          <div class="flex items-center justify-between mb-1 sm:mb-2">
+            <h3 class="font-black text-slate-900 text-xs sm:text-sm flex items-center space-x-1.5">
+              <span class="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-blue-600"></span>
               <span>108 課綱指標目錄</span>
             </h3>
-            <span id="indicatorCountBadge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-blue-100 text-blue-800 border border-blue-200">96 個指標</span>
+            <div class="flex items-center space-x-2">
+              <span id="indicatorCountBadge" class="text-[11px] sm:text-xs px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-800 border border-blue-200">96 個指標</span>
+              <button type="button" onclick="jumpToIndicatorDetail()" class="lg:hidden text-[11px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-300 px-2 py-0.5 rounded-lg flex items-center space-x-0.5" title="跳至所選指標之縱向銜接與考情分析">
+                <span>看分析</span><span>⬇</span>
+              </button>
+            </div>
           </div>
-          <div class="text-[11px] text-slate-500 font-medium">點擊指標查看「課綱規範、高頻迷思分析與歷年檢測試題」</div>
+          <div class="text-[10px] sm:text-[11px] text-slate-500 font-medium">點擊指標查看「課綱規範、高頻迷思分析與歷年檢測試題」</div>
         </div>
 
         <!-- Scrollable Indicator Item List -->
-        <div class="overflow-y-auto custom-scrollbar flex-1 py-1 flex flex-col gap-1.5 pr-1" id="indicatorListContainer">
+        <div class="overflow-y-auto custom-scrollbar flex-1 py-1 flex flex-col gap-1 sm:gap-1.5 pr-1" id="indicatorListContainer">
           <!-- Dynamically populated indicator items -->
         </div>
       </div>
@@ -806,8 +831,8 @@
       const btnIndicators = document.getElementById('btnTabIndicators');
       const btnMatrix = document.getElementById('btnTabMatrix');
 
-      const activeBtnClass = 'flex-1 min-w-[200px] py-3.5 px-4 rounded-xl font-black text-sm sm:text-base flex items-center justify-center space-x-2 transition-all shadow-md bg-sky-600 text-white ring-2 ring-sky-400';
-      const inactiveBtnClass = 'flex-1 min-w-[200px] py-3.5 px-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center space-x-2 transition-all bg-slate-800 text-slate-300 hover:bg-slate-700/80 hover:text-white border border-slate-700';
+      const activeBtnClass = 'py-2 sm:py-3.5 px-1 sm:px-4 rounded-lg sm:rounded-xl font-black text-xs sm:text-base flex flex-col sm:flex-row items-center justify-center sm:space-x-2 transition-all shadow-md bg-sky-600 text-white ring-2 ring-sky-400';
+      const inactiveBtnClass = 'py-2 sm:py-3.5 px-1 sm:px-4 rounded-lg sm:rounded-xl font-bold text-xs sm:text-base flex flex-col sm:flex-row items-center justify-center sm:space-x-2 transition-all bg-slate-800 text-slate-300 hover:bg-slate-700/80 hover:text-white border border-slate-700';
 
       // Hide all views & controls
       if (viewUnits) viewUnits.classList.add('hidden');
@@ -872,18 +897,18 @@
       // Grade button styles
       document.querySelectorAll('.grade-btn').forEach(btn => {
         if (parseInt(btn.dataset.g) === currentGrade) {
-          btn.className = 'grade-btn py-2 text-sm font-black rounded-lg bg-sky-600 text-white shadow-md ring-2 ring-sky-500/30';
+          btn.className = 'grade-btn py-1.5 sm:py-2 text-xs sm:text-sm font-black rounded-md sm:rounded-lg bg-sky-600 text-white shadow-md ring-2 ring-sky-500/30';
         } else {
-          btn.className = 'grade-btn py-2 text-sm font-bold rounded-lg bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950';
+          btn.className = 'grade-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950';
         }
       });
 
       // Publisher button styles
       document.querySelectorAll('.pub-btn').forEach(btn => {
         if (btn.dataset.p === currentPublisher) {
-          btn.className = 'pub-btn py-2 text-sm font-black rounded-lg bg-indigo-600 text-white shadow-md ring-2 ring-indigo-500/30';
+          btn.className = 'pub-btn py-1.5 sm:py-2 text-xs sm:text-sm font-black rounded-md sm:rounded-lg bg-indigo-600 text-white shadow-md ring-2 ring-indigo-500/30';
         } else {
-          btn.className = 'pub-btn py-2 text-sm font-bold rounded-lg bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950';
+          btn.className = 'pub-btn py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-md sm:rounded-lg bg-white text-slate-800 shadow-xs border-2 border-slate-300 hover:border-slate-400 hover:text-slate-950';
         }
       });
 
@@ -911,7 +936,7 @@
         }
 
         const btn = document.createElement('button');
-        btn.onclick = () => selectUnit(idx);
+        btn.onclick = () => selectUnit(idx, true);
         btn.className = `w-full text-left p-4 rounded-xl transition-all flex flex-col gap-1.5 ${
           isSelected 
             ? 'bg-sky-50 border-2 border-sky-600 ring-2 ring-sky-500/30 shadow-md' 
@@ -939,12 +964,48 @@
       });
     }
 
-    function selectUnit(idx) {
+    function toggleHeroGuidance() {
+      const content = document.getElementById('heroGuidanceContent');
+      const btnText = document.getElementById('heroToggleText');
+      if (!content) return;
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        content.classList.add('flex');
+        if (btnText) btnText.textContent = '收合說明 ▴';
+      } else {
+        content.classList.add('hidden');
+        content.classList.remove('flex');
+        if (btnText) btnText.textContent = '展開說明 ▾';
+      }
+    }
+
+    function jumpToUnitDetail() {
+      const panel = document.getElementById('unitDetailPanel');
+      if (panel) {
+        const yOffset = -70;
+        const y = panel.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }
+
+    function jumpToIndicatorDetail() {
+      const banner = document.getElementById('indBannerCode');
+      if (banner) {
+        const yOffset = -70;
+        const y = banner.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }
+
+    function selectUnit(idx, isUserClick = false) {
       currentUnitIndex = idx;
       currentUnitYearFilter = 'all';
       currentDiffFilter = 'all';
       renderUnitList();
       renderUnitDetail();
+      if (isUserClick && window.innerWidth < 1024) {
+        jumpToUnitDetail();
+      }
     }
 
     function renderUnitDetail() {
@@ -2446,7 +2507,7 @@ ${qData.rem || '（無官方補救文字）'}
         const isActive = (code === currentIndicator);
 
         const item = document.createElement('div');
-        item.onclick = () => selectIndicator(code);
+        item.onclick = () => selectIndicator(code, true);
         item.className = `p-2.5 rounded-xl cursor-pointer transition-all flex items-center justify-between text-xs border ${
           isActive
             ? 'bg-blue-600 text-white font-bold border-blue-600 shadow-sm ring-2 ring-blue-400/40'
@@ -2466,10 +2527,13 @@ ${qData.rem || '（無官方補救文字）'}
       });
     }
 
-    function selectIndicator(code) {
+    function selectIndicator(code, isUserClick = false) {
       currentIndicator = code;
       renderIndicatorList();
       renderIndicatorDetail(code);
+      if (isUserClick && window.innerWidth < 1024) {
+        jumpToIndicatorDetail();
+      }
     }
 
     function renderIndicatorDetail(code) {
